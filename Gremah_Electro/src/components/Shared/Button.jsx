@@ -1,14 +1,13 @@
-import React from "react";
+import React from 'react'
 
-const Button = ({ text, bgColor, textColor, handler = () => {} }) => {
+const Button = ({ text, bgColor = 'bg-blue-600', textColor = 'text-white' }) => {
   return (
     <button
-      onClick={handler}
-      className={`${bgColor} ${textColor} cursor-pointer hover:scale-105 duration-300 py-2 px-8 rounded-full relative z-10`}
+      className={`${bgColor} ${textColor} px-4 py-2 rounded-full font-medium hover:opacity-90 transition duration-300 shadow-md`}
     >
       {text}
     </button>
-  );
-};
+  )
+}
 
-export default Button;
+export default Button

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "aos": "^2.3.4",
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1"
   }
