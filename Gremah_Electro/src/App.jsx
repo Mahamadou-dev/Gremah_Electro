@@ -13,6 +13,7 @@ import Footer from './components/Footer/Footer';
 
 import headphone from './assets/hero/headphone.png';
 import smartwatch2 from './assets/category/smartwatch2-removebg-preview.png';
+import ScrollToTopButton from './components/Shared/ScrollToTopButton';
 
 const bannerData = {
   discount: "30% DE RÉDUCTION",
@@ -67,6 +68,7 @@ const App = () => {
       <Blogs />
       <Partners />
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 };

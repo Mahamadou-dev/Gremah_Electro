@@ -34,7 +34,7 @@ const Footer = () => {
               href="#"
               className='text-primary font-semibold tracking-widest text-2xl uppercase sm:text-3xl'
             >
-              Gremah Electro
+               Gremah Electro
             </a>
             <p className='mt-4 text-sm'>
               Gremah Electro, branche de GremahTech, est spécialisée dans la vente de produits électroniques de haute qualité.
