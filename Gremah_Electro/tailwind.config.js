@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class', // Enable dark mode support; active le mode dark tailwind
+  darkMode: 'class', // Active le dark mode par la classe "dark"
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -19,18 +19,35 @@ export default {
         brandOrange: '#ffa500',
         brandGray: '#808080',
         brandWhite: '#eeeeee',
-    },
-    container: {
-      center: true,
-      padding: {
-        DEFAULT: '1rem',
-        sm: '3rem',
-        lg: '4rem',
-        xl: '5rem',
-        '2xl': '6rem',
+      },
+      container: {
+        center: true,
+        padding: {
+          DEFAULT: '1rem',
+          sm: '3rem',
+          lg: '4rem',
+          xl: '5rem',
+          '2xl': '6rem',
+        },
+      },
+      keyframes: {
+        fadeInLeft: {
+          '0%': { opacity: '0', transform: 'translateX(-100%)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        fadeInLeft: 'fadeInLeft 0.4s ease-out',
+        fadeInUp: 'fadeInUp 0.4s ease-out',
       },
     },
   },
-  plugins: [],
-}
+ plugins: [
+  require('tailwindcss-animate'),
+]
+
 }

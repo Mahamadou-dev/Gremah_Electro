@@ -11,7 +11,7 @@ const serviceData = [
         id: 1,
         icon: <FaCarSide className='text-4xl text-primary md:text-5xl' />,
         title: 'Livraison gratuite',
-        description: 'Profitez de la livraison gratuite sur toutes vos commandes.'
+        description: 'Profitez de la livraison gratuite à partir de 100 000 fcfa.'
     },
     {
         id: 2,

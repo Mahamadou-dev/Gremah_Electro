@@ -1,40 +1,92 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import Heading from '../Shared/Heading';
 import ProductCard from './ProductCard';
-
-// images import
-import Img1 from '../../assets/product/p-1.jpg';
-import Img2 from '../../assets/product/p-2.jpg';
-import Img3 from '../../assets/product/p-3.jpg';
-import Img4 from '../../assets/product/p-4.jpg';
-import Img5 from '../../assets/product/p-5.jpg';
-import Img6 from '../../assets/product/p-6.jpg';
-import Img7 from '../../assets/product/p-7.jpg';
-
-const productData = [
-  { id: 1, img: Img1, title: "Casque Bluetooth", price: 4200 },
-  { id: 2, img: Img2, title: "Montagne Rocheuse", price: 8000 },
-  { id: 3, img: Img3, title: "Lunettes de Protection", price: 3200 },
-  { id: 4, img: Img4, title: "T-shirt Imprimé", price: 4000 },
-  { id: 5, img: Img5, title: "Écouteurs Sans Fil", price: 500 },
-  { id: 6, img: Img6, title: "Montagnes", price: 600 },
-  { id: 7, img: Img7, title: "Lunettes Soleil", price: 700 },
-  { id: 8, img: Img7, title: "Lunettes Soleil", price: 700 },
-];
+import { 
+  casquesEcouteurs,
+  accessoires,
+  laptops,
+  smartphones,
+  hautParleurs,
+  smartwatchs
+} from '../../data/products/products';
 
 const Products = () => {
+  // Combiner tous les produits
+  const allProducts = [
+    ...casquesEcouteurs,
+    ...accessoires,
+    ...laptops,
+    ...smartphones,
+    ...hautParleurs,
+    ...smartwatchs
+  ];
+
   return (
-    <section className='bg-gray-50 dark:bg-gray-900 py-12'>
+    <motion.section 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className='bg-gray-50 dark:bg-gray-900 py-12'
+    >
       <div className="container mx-auto px-4">
-        <div
-          data-aos="fade-right"
-          data-aos-duration="800"
+        {/* Heading section with animation */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="mb-12 text-center"
         >
-          <Heading title="Nos Produits" subtitle="Découvrez notre sélection exclusive" />
-        </div>
-        <ProductCard productsData={productData} />
+          <Heading 
+            title="Nos Produits Électroniques" 
+            subtitle="Découvrez notre sélection high-tech exclusive" 
+            center
+          />
+          <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Explorez notre collection de produits électroniques dernier cri à des prix compétitifs.
+          </p>
+        </motion.div>
+        
+        {/* Products grid with staggered animation */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+        >
+          {allProducts.map((product, index) => (
+            <motion.div
+              key={product.id}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ 
+                delay: index * 0.1,
+                duration: 0.5,
+                type: "spring",
+                stiffness: 100
+              }}
+            >
+              <ProductCard 
+                product={{
+                  id: product.id,
+                  slug: product.slug, // Assurez-vous que slug est disponible
+                  img: product.images[0], // Prend la première image
+                  title: product.title,
+                  price: product.price,
+                  originalPrice: product.originalPrice,
+                  category: product.category,
+                  rating: product.rating,
+                  description: product.description,
+                  features: product.features,
+                  specifications: product.specifications
+                }} 
+                showAddToCart={true}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 };
 
