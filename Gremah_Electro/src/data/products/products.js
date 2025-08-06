@@ -5,7 +5,7 @@ import { accessoires } from './accessoires';
 import { laptops } from './laptops';
 import { smartphones } from './smartphones';
 import { hautParleurs } from './haut_parleurs';
-import { smartwatchs } from './smartwatchs';
+import { smartwatchs } from './smartwatches';
 
 // Combiner tous les produits
 const allProducts = [

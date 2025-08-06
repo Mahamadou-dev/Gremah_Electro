@@ -217,5 +217,35 @@ export const casquesEcouteurs = [
     stock: 30,
     isNew: false,
     isBestSeller: false
+  },
+  {
+    id: 'sony-wh-1000xm5',
+    slug: 'casque-sans-fil-sony-wh-1000xm5-noir',
+    title: 'Casque Sans Fil Sony WH-1000XM5 Noir',
+    price: 34990,
+    originalPrice: 39990,
+    category: 'casques_ecouteurs',
+    rating: 4.9,
+    images: [
+      importCasquesImages('headphone.png'),
+    ],
+    description: 'Casque sans fil haut de gamme avec réduction de bruit active, son haute résolution et autonomie de 30 heures.',
+    features: [
+      'Réduction de bruit adaptative',
+      'Son haute résolution LDAC',
+      'Autonomie 30 heures',
+      'Commandes tactiles et assistant vocal intégré'
+    ],
+    specifications: {
+      poids: '250g',
+      connectivite: 'Bluetooth 5.2 / NFC',
+      frequence: '4Hz-40kHz',
+      microphone: 'Oui (intégré)'
+    },
+    colors: ['Noir'],
+    stock: 10,
+    isNew: true,
+    isBestSeller: true
+
   }
 ];

@@ -19,8 +19,8 @@ const Button = ({
     transition-all
     duration-300
     hover:shadow-lg
-    ${bgColor}
-    ${textColor}
+    bg-${bgColor}
+    text-${textColor}
     ${className}
   `;
 

@@ -21,7 +21,7 @@ import { casquesEcouteurs } from '../data/products/casques_ecouteurs';
 import { hautParleurs } from '../data/products/haut_parleurs';
 import { laptops } from '../data/products/laptops';
 import { smartphones } from '../data/products/smartphones';
-import { smartwatchs } from '../data/products/smartwatchs';
+import { smartwatchs } from '../data/products/smartwatches';
 // ... import other categories as needed
 
 // Consolidate all products into a single array

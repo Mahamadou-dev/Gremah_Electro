@@ -1,32 +1,54 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import Home from '../pages/Home';
 import Shop from '../pages/Shop';
 import ProductDetail from '../pages/ProductDetail';
 import Cart from '../pages/Cart';
 import Contact from '../pages/Contact';
 import About from '../pages/About';
+import Blogs from '../pages/Blogs';
+import BlogDetail from '../pages/BlogDetail';
+import NotFound from '../pages/NotFound'; // Nouvelle page 404
 
-import { useParams, Navigate } from 'react-router-dom';
-
+// Wrapper pour ProductDetail
 const ProductDetailWrapper = () => {
   const { slug } = useParams();
   
   if (!slug || slug === 'undefined') {
-    return <Navigate to="/produit-introuvable" replace />;
+    return <Navigate to="/not-found" replace />;
   }
   
   return <ProductDetail />;
 };
 
+// Wrapper pour BlogDetail
+const BlogDetailWrapper = () => {
+  const { id } = useParams();
+  
+  if (!id || id === 'undefined') {
+    return <Navigate to="/not-found" replace />;
+  }
+  
+  return <BlogDetail />;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Routes principales */}
       <Route path="/" element={<Home />} />
       <Route path="/boutique" element={<Shop />} />
-      <Route path="/produit/:slug" element={<ProductDetailWrapper />} /> {/* Changé de :id à :slug */}
+      <Route path="/produit/:slug" element={<ProductDetailWrapper />} />
       <Route path="/panier" element={<Cart />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/a-propos" element={<About />} />
+      
+      {/* Routes des blogs */}
+      <Route path="/blogs" element={<Blogs />} />
+      <Route path="/blog/:id" element={<BlogDetailWrapper />} />
+      
+      {/* Gestion des erreurs */}
+      <Route path="/not-found" element={<NotFound />} />
+      <Route path="*" element={<Navigate to="/not-found" replace />} />
     </Routes>
   );
 };

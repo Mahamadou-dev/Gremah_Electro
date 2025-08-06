@@ -14,6 +14,7 @@ const MenuLinks = [
   { id: 2, name: 'Boutique', to: '/boutique' },
   { id: 3, name: 'À propos', to: '/a-propos' },
   { id: 4, name: 'Contact', to: '/contact' },
+  { id: 5, name: 'Blogues', to: '/blogs' },
 ];
 
 const DropDownLinks = [

@@ -10,16 +10,19 @@ import {
   hautParleurs,
   smartwatchs
 } from '../../data/products/products';
+import Button from '../Shared/Button';
 
 const Products = () => {
   // Combiner tous les produits
   const allProducts = [
-    ...casquesEcouteurs,
-    ...accessoires,
-    ...laptops,
-    ...smartphones,
-    ...hautParleurs,
-    ...smartwatchs
+    casquesEcouteurs[2],
+    accessoires[1],
+    laptops[3], 
+    smartphones[1],
+    hautParleurs[0],
+    smartwatchs[2],
+    laptops[3],
+    smartphones[3],
   ];
 
   return (
@@ -84,6 +87,21 @@ const Products = () => {
               />
             </motion.div>
           ))}
+        </motion.div>
+                <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="mb-12 text-center"
+        >
+          <Button
+            text="Voir tous les produits"
+            bgColor="primary"
+            textColor="white"
+            ariaLabel="Voir tous les produits"
+            onClick={() => window.location.href = '/boutique'}
+            className="mt-8 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-shadow duration-300"
+          />
         </motion.div>
       </div>
     </motion.section>

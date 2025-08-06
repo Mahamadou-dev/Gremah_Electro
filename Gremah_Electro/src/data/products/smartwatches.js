@@ -163,5 +163,39 @@ export const smartwatchs = [
     stock: 12,
     isNew: true,
     isBestSeller: true
+  },
+  {
+    id: 'smartwatch2',
+    slug: 'smartwatch2',
+    title: 'Smartwatch 2',
+    variants: ['Vue 1', 'Vue 2', 'Vue 3', 'Standard'],
+    price: 29990,
+    originalPrice: 34990,
+    category: 'Smartwatchs',
+    rating: 4.1,
+    images:[
+      importSmartwatchsImages('smartwatch2-removebg-preview.png'),
+    ],
+    description: 'Smartwatch 2 avec écran AMOLED, suivi de la santé et notifications intelligentes.',
+    features: [
+      'Écran AMOLED 1.4" HD',
+      'Suivi de la fréquence cardiaque et du sommeil',
+      'Notifications d\'appels et messages',
+      'Résistance à l\'eau IP68',
+      'Autonomie de 7 jours'
+    ],
+    specifications: {
+      ecran: '1.4" AMOLED HD',
+      connectivite: 'Bluetooth 5.0',
+      capteurs: 'Fréquence cardiaque, SpO2, accéléromètre',
+      autonomie: '7 jours',
+      resistanceEau: 'IP68'
+    },
+    colors: ['vert'],
+    stock: 25,
+    isNew: true,
+    isBestSeller: false 
+    
+
   }
 ];

@@ -204,10 +204,10 @@ const CategoryCard = ({ category }) => {
           >
          <Button
             text="Explorer"
-            bgColor={category.buttonBg}
+            bgColor={'backdrop-blur-xl bg-white/10'}
             textColor={category.buttonText}
             onClick={handleBrowseClick}  // ✅ Changé de 'handler' à 'onClick'
-            className="shadow-lg group-hover:shadow-xl transition-shadow"
+            className="shadow-lg group-hover:shadow-xl transition-shadow  border-white/60 border-2 hover:border-white/90 px-6 py-3 "
           />
           </motion.div>
         </div>

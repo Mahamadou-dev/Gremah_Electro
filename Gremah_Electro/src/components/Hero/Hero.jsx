@@ -10,6 +10,8 @@ import { laptops } from '../../data/products/laptops';
 import { smartphones } from '../../data/products/smartphones';
 import { casquesEcouteurs } from '../../data/products/casques_ecouteurs';
 import { hautParleurs } from '../../data/products/haut_parleurs';
+// --- Hero Slide Component ---
+import { useNavigate } from 'react-router-dom';
 
 
 // Fallback image for broken links (ensure this path exists and is a good placeholder)
@@ -84,8 +86,7 @@ const heroSlidesData = [
   },
 ];
 
-// --- Hero Slide Component ---
-import { useNavigate } from 'react-router-dom';
+
 
 const HeroSlide = ({ slide }) => {
   const navigate = useNavigate();

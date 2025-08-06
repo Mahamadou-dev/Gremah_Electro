@@ -7,12 +7,14 @@ import Blogs from '../components/Blogs/Blogs';
 import Partners from '../components/Partners/Partners';
 import ErrorBoundary from '../components/Shared/ErrorBoundary';
 // Importation des images pour les bannières (si utilisées directement dans App.jsx)
-import headphone from '../assets/hero/headphone.png';
-import smartwatch2 from '../assets/category/smartwatch2-removebg-preview.png';
+import headphone from '../assets/products/electro/CASQUES_ECOUTEURS/headphone.png';
+import smartwatch2 from '../assets/products/electro/SMARTWATCHS/smartwatch2-removebg-preview.png';
 
 // Données pour la première bannière
 const bannerData = {
-  discount: "30% DE RÉDUCTION",
+  id: 'sony-wh-1000xm5',
+  slug: 'casque-sans-fil-sony-wh-1000xm5-noir',
+  discount: "15% DE RÉDUCTION",
   mainTitle: "Écouteurs Premium",
   description: "Profitez de notre offre spéciale limitée dans le temps",
   validity: "Valable jusqu'au 31 décembre 2025",
@@ -20,14 +22,17 @@ const bannerData = {
   ctaText: "Achetez maintenant",
   bgColor: "#f42c37",
   features: [
-    "Qualité sonore exceptionnelle",
-    "Confort optimal",
-    "Batterie longue durée"
+      'Réduction de bruit adaptative',
+      'Son haute résolution LDAC',
+      'Autonomie 30 heures',
+      'Commandes tactiles et assistant vocal intégré'
   ]
 };
 
 // Données pour la deuxième bannière
 const bannerData2 = {
+  id: 'smartwatch2',
+  slug: 'smartwatch2',
   discount: "20% DE RÉDUCTION",
   mainTitle: "Montres connectées Premium",
   description: "Profitez de notre offre spéciale limitée dans le temps",
@@ -36,9 +41,11 @@ const bannerData2 = {
   ctaText: "Achetez maintenant",
   bgColor: "#2dcc6f",
   features: [
-    "Connexion bluetooth/wifi exceptionnelle",
-    "Confort optimal",
-    "Batterie longue durée"
+      'Écran AMOLED 1.4" HD',
+      'Suivi de la fréquence cardiaque et du sommeil',
+      'Notifications d\'appels et messages',
+      'Résistance à l\'eau IP68',
+      'Autonomie de 7 jours'
   ]
 };
 
