@@ -2,38 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Heading from '../Shared/Heading';
 import Button from '../Shared/Button';
-
-// Images
-import Img1 from '../../assets/blogs/blog-1.jpg';
-import Img2 from '../../assets/blogs/blog-2.jpg';
-import Img3 from '../../assets/blogs/blog-3.jpg';
-
-const BlogData = [
-  {
-    title: "🕒 Comment choisir la meilleure montre connectée",
-    subtitle: "Découvrez les critères essentiels pour sélectionner la montre connectée qui vous convient le mieux.",
-    date: "Publié le 15 août 2025",
-    image: Img1,
-    readTime: "5 min de lecture"
-  },
-  {
-    title: "🎧 Les avantages des écouteurs sans fil",
-    subtitle: "Explorez les bénéfices des écouteurs sans fil pour une expérience audio sans contraintes.",
-    date: "Publié le 20 août 2025",
-    image: Img2,
-    readTime: "4 min de lecture"
-  },
-  {
-    title: "🔋 Comment entretenir vos appareils électroniques",
-    subtitle: "Des conseils pratiques pour prolonger la durée de vie de vos appareils électroniques.",
-    date: "Publié le 30 août 2025",
-    image: Img3,
-    readTime: "7 min de lecture"
-  },
-];
+import { blogs } from '../../data/blogs/blogs';
 
 const Blogs = () => {
   const navigate = useNavigate();
+  
+  // Sélectionne les 3 derniers articles (ou les 3 plus récents)
+  const recentBlogs = [...blogs]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 3);
 
   return (
     <section className='bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-16 md:py-20'>
@@ -49,9 +26,9 @@ const Blogs = () => {
 
         {/* Grille des articles */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12'>
-          {BlogData.map((article, index) => (
+          {recentBlogs.map((article, index) => (
             <div
-              key={article.title}
+              key={article.id}
               data-aos="fade-up"
               data-aos-delay={index * 100}
               data-aos-duration="800"
@@ -66,18 +43,24 @@ const Blogs = () => {
                 />
                 <div className='absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
                 <span className='absolute top-4 right-4 bg-primary text-white text-xs px-3 py-1 rounded-full'>
-                  {article.readTime}
+                  {article.readTime} min de lecture
                 </span>
               </div>
 
               {/* Contenu */}
               <div className='p-6 space-y-3'>
-                <p className='text-sm text-gray-500 dark:text-gray-400 font-medium'>{article.date}</p>
+                <p className='text-sm text-gray-500 dark:text-gray-400 font-medium'>
+                  Publié le {new Date(article.date).toLocaleDateString('fr-FR', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </p>
                 <h3 className='font-bold text-xl text-gray-800 dark:text-white line-clamp-2'>{article.title}</h3>
                 <p className='text-gray-600 dark:text-gray-300 line-clamp-2'>{article.subtitle}</p>
                 <button 
                   className='text-primary dark:text-primary-light font-medium flex items-center mt-4 hover:underline'
-                  onClick={() => navigate('/blogs')}
+                  onClick={() => navigate(`/blogs/${article.slug}`)}
                 >
                   Lire l'article
                   <svg className='w-4 h-4 ml-2' fill="none" stroke="currentColor" viewBox="0 0 24 24">

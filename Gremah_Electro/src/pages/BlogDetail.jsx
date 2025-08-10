@@ -1,120 +1,26 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiClock, FiCalendar, FiTag } from 'react-icons/fi';
 import Button from '../components/Shared/Button';
-
-// Données simulées des articles de blog
-const blogPosts = {
-  1: {
-    id: 1,
-    title: "🕒 Guide ultime pour choisir sa montre connectée en 2025",
-    author: "Marc Techno",
-    date: "15 août 2025",
-    readTime: "8 min",
-    category: "Technologie",
-    image: "/assets/blogs/smartwatch.jpg",
-    content: `
-      <h2 class="text-2xl font-bold mb-4">Introduction</h2>
-      <p class="mb-4">Le marché des montres connectées a explosé ces dernières années avec des fonctionnalités toujours plus innovantes. Ce guide complet vous aidera à faire le bon choix.</p>
-      
-      <h2 class="text-2xl font-bold mb-4 mt-8">1. Définir ses besoins</h2>
-      <p class="mb-4">Avant de choisir, identifiez votre usage principal :</p>
-      <ul class="list-disc pl-6 mb-4 space-y-2">
-        <li>Suivi d'activité et santé</li>
-        <li>Notifications et productivité</li>
-        <li>Style et personnalisation</li>
-        <li>Autonomie prolongée</li>
-      </ul>
-      
-      <h2 class="text-2xl font-bold mb-4 mt-8">2. Comparatif des écosystèmes</h2>
-      <p class="mb-4">Chaque marque propose son propre environnement :</p>
-      <table class="min-w-full mb-4">
-        <thead class="bg-gray-100 dark:bg-gray-700">
-          <tr>
-            <th class="px-4 py-2 text-left">Marque</th>
-            <th class="px-4 py-2 text-left">Compatibilité</th>
-            <th class="px-4 py-2 text-left">Points forts</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="border-b border-gray-200 dark:border-gray-700">
-            <td class="px-4 py-2">Apple Watch</td>
-            <td class="px-4 py-2">iOS uniquement</td>
-            <td class="px-4 py-2">Intégration parfaite, ECG</td>
-          </tr>
-          <tr class="border-b border-gray-200 dark:border-gray-700">
-            <td class="px-4 py-2">Wear OS</td>
-            <td class="px-4 py-2">Android/iOS</td>
-            <td class="px-4 py-2">Google Assistant, polyvalence</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Garmin</td>
-            <td class="px-4 py-2">Tous smartphones</td>
-            <td class="px-4 py-2">Autonomie, sports extrêmes</td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <h2 class="text-2xl font-bold mb-4 mt-8">3. Budget et valeur</h2>
-      <p class="mb-4">Les prix varient de 100€ à plus de 1000€. Voici notre analyse qualité/prix :</p>
-      <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg mb-4">
-        <p class="font-semibold">💡 Conseil d'expert : Pour la plupart des utilisateurs, une montre entre 200€ et 400€ offre le meilleur rapport fonctionnalités/prix.</p>
-      </div>
-      
-      <h2 class="text-2xl font-bold mb-4 mt-8">Notre sélection 2025</h2>
-      <ol class="list-decimal pl-6 mb-4 space-y-4">
-        <li><strong>Apple Watch Series 9</strong> - Le meilleur pour les iPhone</li>
-        <li><strong>Samsung Galaxy Watch 6 Pro</strong> - Meilleure alternative Android</li>
-        <li><strong>Garmin Venu 3</strong> - Pour les sportifs</li>
-        <li><strong>Amazfit GTR 4</strong> - Meilleur rapport qualité-prix</li>
-      </ol>
-      
-      <h2 class="text-2xl font-bold mb-4 mt-8">Conclusion</h2>
-      <p class="mb-4">Le choix dépend avant tout de votre smartphone et de vos priorités. Testez en magasin pour le confort et consultez nos tests complets pour chaque modèle.</p>
-    `,
-    relatedPosts: [
-      {
-        id: 4,
-        title: "📱 Comparatif : Meilleurs smartphones 2025",
-        image: "/assets/blogs/smartphones.jpg",
-        date: "10 septembre 2025"
-      },
-      {
-        id: 6,
-        title: "💻 Comment prolonger la batterie de son laptop",
-        image: "/assets/blogs/laptop.jpg",
-        date: "25 septembre 2025"
-      }
-    ]
-  },
-  2: {
-    id: 2,
-    title: "🎧 Test complet : Sony WH-1000XM6 vs Bose QC45",
-    author: "Sarah Audio",
-    date: "22 août 2025",
-    readTime: "12 min",
-    category: "Audio",
-    image: "/assets/blogs/headphones.jpg",
-    content: `
-      <h2 class="text-2xl font-bold mb-4">Introduction</h2>
-      <p class="mb-4">Nous avons testé pendant 3 semaines les deux références du marché des casques antibruit. Voici notre verdict détaillé.</p>
-      ...
-    `,
-    relatedPosts: [
-      {
-        id: 3,
-        title: "🔊 Les innovations audio à suivre en 2025",
-        image: "/assets/blogs/audio-tech.jpg",
-        date: "30 août 2025"
-      }
-    ]
-  },
-  // ... autres articles
-};
+import { blogs } from '../data/blogs/blogs';
 
 const BlogDetail = () => {
-  const { id } = useParams();
-  const post = blogPosts[id];
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  
+  // Trouver l'article correspondant au slug
+  const post = blogs.find(blog => blog.slug === slug);
+
+  // Articles similaires (utilise les relatedPosts du tableau de données)
+  const relatedPosts = post?.relatedPosts 
+    ? blogs.filter(blog => post.relatedPosts.includes(blog.id))
+    : [];
+
+  // Formater la date en français
+  const formatDate = (dateString) => {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('fr-FR', options);
+  };
 
   if (!post) {
     return (
@@ -131,13 +37,13 @@ const BlogDetail = () => {
     <div className="bg-gray-50 dark:bg-gray-900">
       {/* Header avec bouton retour */}
       <div className="container mx-auto px-4 py-8">
-        <Link 
-          to="/blogs" 
+        <button 
+          onClick={() => navigate(-1)}
           className="inline-flex items-center text-primary dark:text-primary-light hover:underline"
         >
           <FiArrowLeft className="mr-2" />
           Retour aux articles
-        </Link>
+        </button>
       </div>
 
       {/* Article principal */}
@@ -145,10 +51,10 @@ const BlogDetail = () => {
         {/* Métadonnées */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-300 mb-6">
           <span className="flex items-center">
-            <FiCalendar className="mr-1" /> {post.date}
+            <FiCalendar className="mr-1" /> {formatDate(post.date)}
           </span>
           <span className="flex items-center">
-            <FiClock className="mr-1" /> {post.readTime} de lecture
+            <FiClock className="mr-1" /> {post.readTime} min de lecture
           </span>
           <span className="flex items-center">
             <FiTag className="mr-1" /> {post.category}
@@ -162,7 +68,9 @@ const BlogDetail = () => {
 
         {/* Auteur */}
         <div className="flex items-center mb-8">
-          <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 mr-3"></div>
+          <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 mr-3 flex items-center justify-center text-xs font-bold text-white">
+            {post.author.split(' ').map(n => n[0]).join('')}
+          </div>
           <div>
             <p className="font-medium text-gray-900 dark:text-white">{post.author}</p>
             <p className="text-sm text-gray-600 dark:text-gray-300">Expert en {post.category.toLowerCase()}</p>
@@ -212,7 +120,9 @@ const BlogDetail = () => {
         {/* Auteur (détaillé) */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md mb-12">
           <div className="flex flex-col md:flex-row items-center">
-            <div className="w-20 h-20 rounded-full bg-gray-300 dark:bg-gray-600 mb-4 md:mb-0 md:mr-6"></div>
+            <div className="w-20 h-20 rounded-full bg-gray-300 dark:bg-gray-600 mb-4 md:mb-0 md:mr-6 flex items-center justify-center text-xl font-bold text-white">
+              {post.author.split(' ').map(n => n[0]).join('')}
+            </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{post.author}</h3>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
@@ -223,41 +133,46 @@ const BlogDetail = () => {
                   : "Rédacteur expert en nouvelles technologies et gadgets électroniques."}
               </p>
               <div className="flex space-x-3">
-                <Link to={`/blogs?author=${post.author.replace(/\s+/g, '-').toLowerCase()}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                <button 
+                  onClick={() => navigate(`/blogs?author=${post.author.replace(/\s+/g, '-').toLowerCase()}`)}
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                >
                   Voir tous les articles
-                </Link>
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         {/* Articles similaires */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Vous pourriez aussi aimer</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {post.relatedPosts.map((related) => (
-              <Link 
-                key={related.id} 
-                to={`/blog/${related.id}`}
-                className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
-              >
-                <img 
-                  src={related.image} 
-                  alt={related.title} 
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">{related.title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{related.date}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {relatedPosts.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Vous pourriez aussi aimer</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {relatedPosts.map((related) => (
+                <Link 
+                  key={related.id} 
+                  to={`/blogs/${related.slug}`}
+                  className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
+                >
+                  <img 
+                    src={related.image} 
+                    alt={related.title} 
+                    className="w-full h-40 object-cover"
+                  />
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">{related.title}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{formatDate(related.date)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Commentaires */}
         <section className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Commentaires ({post.id === 1 ? '5' : '3'})</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Commentaires (3)</h2>
           
           <div className="space-y-6">
             {/* Commentaire 1 */}
@@ -272,58 +187,12 @@ const BlogDetail = () => {
                     <span className="text-xs text-gray-500 dark:text-gray-400">1 jour</span>
                   </div>
                   <p className="text-gray-700 dark:text-gray-300">
-                    {post.id === 1 
-                      ? "Excellent article ! J'hésitais justement entre la Galaxy Watch et l'Apple Watch. Vos comparaisons m'ont beaucoup aidé."
-                      : "Très bon comparatif, j'attends avec impatience le test des nouvelles AirPods !"}
+                    Excellent article ! Merci pour ces analyses détaillées qui m'ont beaucoup aidé dans mon choix.
                   </p>
                 </div>
                 <div className="mt-2 flex space-x-4 text-sm">
                   <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Répondre</button>
-                  <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Aimer (12)</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Commentaire 2 */}
-            <div className="flex">
-              <div className="flex-shrink-0 mr-4">
-                <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-              </div>
-              <div>
-                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Emma Tech</h4>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">3 jours</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    {post.id === 1
-                      ? "Petite correction : la nouvelle Galaxy Watch 6 est maintenant compatible avec iPhone, même si certaines fonctionnalités sont limitées."
-                      : "Vous pourriez ajouter une section sur la qualité des micros pour les appels, c'est souvent négligé mais très important !"}
-                  </p>
-                </div>
-                <div className="mt-2 flex space-x-4 text-sm">
-                  <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Répondre</button>
-                  <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Aimer (8)</button>
-                </div>
-
-                {/* Réponse */}
-                <div className="flex mt-4 ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                  <div className="flex-shrink-0 mr-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-                  </div>
-                  <div>
-                    <div className="bg-gray-50 dark:bg-gray-600/50 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{post.author}</h4>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">2 jours</span>
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        {post.id === 1
-                          ? "Bonne remarque Emma ! Nous mettrons à jour l'article avec cette information."
-                          : "Excellente suggestion, nous l'ajouterons dans une future mise à jour."}
-                      </p>
-                    </div>
-                  </div>
+                  <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Aimer (5)</button>
                 </div>
               </div>
             </div>

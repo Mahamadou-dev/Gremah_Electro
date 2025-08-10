@@ -134,7 +134,7 @@ export const laptops = [
 
   // PC Portable Gamer Lenovo Legion Pro 7 16IRX9H i9-14900HX RTX 4090
   {
-    id: 'lenovo-legion-pro-7-16irx9h',
+    id: 'lenovo-legion-pro-7-16irx9hh8',
     slug: 'pc-portable-gamer-lenovo-legion-pro-7-16irx9h-i9-14900hx-rtx-4090-16g-64-go-ddr5-1-to-ssd-windows-11-noir',
     title: 'PC Portable Gamer Lenovo Legion Pro 7 16IRX9H i9-14900HX RTX 4090 16G 64 Go DDR5 1 To SSD Windows 11 Noir',
     variants: ['Vue 1', 'Vue 2', 'Vue 3', 'Standard'],

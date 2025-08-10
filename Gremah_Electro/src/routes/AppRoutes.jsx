@@ -7,7 +7,7 @@ import Contact from '../pages/Contact';
 import About from '../pages/About';
 import Blogs from '../pages/Blogs';
 import BlogDetail from '../pages/BlogDetail';
-import NotFound from '../pages/NotFound'; // Nouvelle page 404
+import NotFound from '../pages/NotFound';
 
 // Wrapper pour ProductDetail
 const ProductDetailWrapper = () => {
@@ -20,11 +20,11 @@ const ProductDetailWrapper = () => {
   return <ProductDetail />;
 };
 
-// Wrapper pour BlogDetail
+// Wrapper pour BlogDetail - MODIFIÉ pour utiliser slug au lieu de id
 const BlogDetailWrapper = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   
-  if (!id || id === 'undefined') {
+  if (!slug || slug === 'undefined') {
     return <Navigate to="/not-found" replace />;
   }
   
@@ -42,9 +42,9 @@ const AppRoutes = () => {
       <Route path="/contact" element={<Contact />} />
       <Route path="/a-propos" element={<About />} />
       
-      {/* Routes des blogs */}
+      {/* Routes des blogs - MODIFIÉ pour utiliser /blogs/:slug */}
       <Route path="/blogs" element={<Blogs />} />
-      <Route path="/blog/:id" element={<BlogDetailWrapper />} />
+      <Route path="/blogs/:slug" element={<BlogDetailWrapper />} />
       
       {/* Gestion des erreurs */}
       <Route path="/not-found" element={<NotFound />} />

@@ -2,98 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiCalendar, FiClock, FiTag } from 'react-icons/fi';
 import Heading from '../components/Shared/Heading';
-
-
-
-const importBlogPostsImages = (fileName) => {
-  const modules = import.meta.glob('/src/assets/blogs/*.{jpg,jpeg,png,webp}', { eager: true });
-  return modules[`/src/assets/blogs/${fileName}`]?.default
-    || '/fallback-product-image.jpg';
-};
-
-// Données des articles de blog
-const blogPosts = [
-  {
-    id: 1,
-    title: "🕒 Guide ultime pour choisir sa montre connectée en 2025",
-    subtitle: "Comparatif des meilleurs modèles et conseils d'achat pour trouver la montre intelligente parfaite",
-    date: "15 août 2025",
-    readTime: "8 min",
-    category: "Technologie",
-    image:importBlogPostsImages( "smartwatch.jpeg"),
-    author: "Marc Techno"
-  },
-  {
-    id: 2,
-    title: "🎧 Test complet : Sony WH-1000XM6 vs Bose QC45",
-    subtitle: "Battle des références du marché des casques audio sans fil avec réduction de bruit active",
-    date: "22 août 2025",
-    readTime: "12 min",
-    category: "Audio",
-    image:importBlogPostsImages( "headphones.jpeg"),
-    author: "Sarah Audio"
-  },
-  {
-    id: 3,
-    title: "🔋 10 astuces pour prolonger la durée de vie de vos batteries",
-    subtitle: "Les meilleures pratiques pour optimiser l'autonomie de vos appareils électroniques",
-    date: "30 août 2025",
-    readTime: "6 min",
-    category: "Conseils",
-    image:importBlogPostsImages( "battery.jpeg" ),
-    author: "Julie Tech"
-  },
-  {
-    id: 4,
-    title: "📱 Comparatif : Meilleurs smartphones 2025",
-    subtitle: "Notre sélection des modèles les plus innovants cette année avec leurs forces et faiblesses",
-    date: "10 septembre 2025",
-    readTime: "10 min",
-    category: "Technologie",
-    image:importBlogPostsImages( "smartphones.jpeg"),
-    author: "Marc Techno"
-  },
-  {
-    id: 5,
-    title: "💻 Configurer son espace de travail idéal",
-    subtitle: "Ergonomie, câble management et équipements pour un setup productif",
-    date: "18 septembre 2025",
-    readTime: "7 min",
-    category: "Lifestyle",
-    image:importBlogPostsImages( "workspace.jpeg"),
-    author: "Alex Pro"
-  },
-  {
-    id: 6,
-    title: "🖥️ PC vs Mac : lequel choisir en 2025 ?",
-    subtitle: "Analyse approfondie des deux écosystèmes pour vous aider à décider",
-    date: "25 septembre 2025",
-    readTime: "9 min",
-    category: "Technologie",
-    image:importBlogPostsImages( "pc-vs-mac.jpeg"),
-    author: "Julie Tech"
-  },
-  {
-    id: 7,
-    title: "🔊 Les innovations audio à suivre en 2025",
-    subtitle: "Découvrez les technologies qui vont révolutionner votre expérience sonore",
-    date: "2 octobre 2025",
-    readTime: "5 min",
-    category: "Audio",
-    image:importBlogPostsImages( "audio-tech.jpeg"),
-    author: "Sarah Audio"
-  },
-  {
-    id: 8,
-    title: "⌨️ Les accessoires indispensables pour télétravail",
-    subtitle: "Notre sélection d'équipements pour travailler confortablement de chez soi",
-    date: "9 octobre 2025",
-    readTime: "6 min",
-    category: "Lifestyle",
-    image:importBlogPostsImages( "home-office.jpeg"),
-    author: "Alex Pro"
-  }
-];
+import { blogs } from '../data/blogs/blogs';
 
 const Blogs = () => {
   // État pour le filtre actif
@@ -101,11 +10,27 @@ const Blogs = () => {
   
   // Filtrer les articles selon la catégorie sélectionnée
   const filteredPosts = activeFilter === 'Tous' 
-    ? blogPosts 
-    : blogPosts.filter(post => post.category === activeFilter);
+    ? blogs 
+    : blogs.filter(post => post.category === activeFilter);
 
   // Extraire les catégories uniques pour les filtres
-  const categories = ['Tous', ...new Set(blogPosts.map(post => post.category))];
+  const categories = ['Tous', ...new Set(blogs.map(post => post.category))];
+
+  // Pagination
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const postsPerPage = 6;
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  
+  // Calcul des articles à afficher pour la page courante
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+
+  // Formater la date en français
+  const formatDate = (dateString) => {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('fr-FR', options);
+  };
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 py-12 md:py-16">
@@ -127,7 +52,10 @@ const Blogs = () => {
           {categories.map(category => (
             <button
               key={category}
-              onClick={() => setActiveFilter(category)}
+              onClick={() => {
+                setActiveFilter(category);
+                setCurrentPage(1); // Reset à la première page quand on change de filtre
+              }}
               className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                 activeFilter === category
                   ? 'bg-primary text-white'
@@ -141,12 +69,12 @@ const Blogs = () => {
 
         {/* Grille des articles */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map((post, index) => (
+          {currentPosts.map((post) => (
             <article 
               key={post.id}
               className="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg dark:shadow-gray-900/30 h-full flex flex-col hover:shadow-xl transition-all duration-300"
             >
-              <Link to={`/blog/${post.id}`} className="flex flex-col h-full">
+              <Link to={`/blogs/${post.slug}`} className="flex flex-col h-full">
                 {/* Image */}
                 <div className="relative overflow-hidden h-48">
                   <img
@@ -164,10 +92,10 @@ const Blogs = () => {
                 <div className="p-6 flex-grow">
                   <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
                     <span className="flex items-center">
-                      <FiCalendar className="mr-1" /> {post.date}
+                      <FiCalendar className="mr-1" /> {formatDate(post.date)}
                     </span>
                     <span className="flex items-center">
-                      <FiClock className="mr-1" /> {post.readTime}
+                      <FiClock className="mr-1" /> {post.readTime} min
                     </span>
                   </div>
                   
@@ -177,7 +105,9 @@ const Blogs = () => {
                   <p className="text-gray-600 dark:text-gray-300 mb-4">{post.subtitle}</p>
                   
                   <div className="flex items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
-                    <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 mr-3"></div>
+                    <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 mr-3 flex items-center justify-center text-xs font-bold text-white">
+                      {post.author.split(' ').map(n => n[0]).join('')}
+                    </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{post.author}</p>
                     </div>
@@ -189,24 +119,25 @@ const Blogs = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center mt-16">
-          <nav className="flex items-center space-x-2">
-            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white">
-              1
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-              2
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-              3
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </nav>
-        </div>
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-16">
+            <nav className="flex items-center space-x-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-full transition ${
+                    currentPage === page
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </nav>
+          </div>
+        )}
       </div>
     </section>
   );

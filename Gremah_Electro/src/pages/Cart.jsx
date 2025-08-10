@@ -1,3 +1,4 @@
+// src/pages/Cart.jsx
 import React, { useState } from 'react';
 import { FiTrash2, FiPlus, FiMinus, FiShoppingCart, FiArrowRight, FiCheck, FiPercent } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
