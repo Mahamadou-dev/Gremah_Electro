@@ -1,48 +1,27 @@
-// src/pages/Cart.jsx
-import React, { useState } from 'react';
-import { FiTrash2, FiPlus, FiMinus, FiShoppingCart, FiArrowRight, FiCheck, FiPercent } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { 
+  FiTrash2, FiPlus, FiMinus, FiShoppingCart, 
+  FiArrowRight, FiCheck, FiPercent, FiX, 
+  FiInfo, FiCreditCard, FiDollarSign, FiSmartphone 
+} from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Button from '../components/Shared/Button';
-import p1 from '../assets/product/p-1.jpg';
-import p2 from '../assets/product/p-2.jpg';
-import p3 from '../assets/product/p-3.jpg';
-import p4 from '../assets/product/p-4.jpg';
-import p5 from '../assets/product/p-5.jpg';
-import p6 from '../assets/product/p-6.jpg';
-import p7 from '../assets/product/p-7.jpg';
+import { useCart } from '../hooks/useCart';
+import { formatPrice } from '../utils/formatPrice';
+import Confetti from 'react-dom-confetti';
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([
-    { 
-      id: 1, 
-      img: p1, 
-      title: "Casque Bluetooth Premium", 
-      price: 4200,
-      originalPrice: 5000,
-      quantity: 2,
-      color: "Noir",
-      warranty: "2 ans"
-    },
-    { 
-      id: 2, 
-      img: p2, 
-      title: "Smartwatch Pro", 
-      price: 8000,
-      quantity: 1,
-      color: "Argent",
-      warranty: "1 an"
-    },
-    { 
-      id: 3, 
-      img: p3, 
-      title: "Lunettes VR", 
-      price: 3200,
-      quantity: 1,
-      color: "Noir",
-      warranty: "1 an"
-    }
-  ]);
-
+  const { 
+    cartItems, 
+    removeFromCart, 
+    updateQuantity, 
+    clearCart,
+    cartTotal: contextCartTotal,
+    cartCount
+  } = useCart();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,28 +36,42 @@ const Cart = () => {
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [confetti, setConfetti] = useState(false);
+
+  // Effet pour les appareils mobiles
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    setShowOrderSummary(!isMobile);
+  }, []);
 
   const handleQuantityChange = (id, value) => {
-    setCartItems(cartItems.map(item => 
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity + value) } : item
-    ));
+    const item = cartItems.find(item => item.id === id);
+    if (item) {
+      const newQuantity = Math.max(1, Math.min(99, item.quantity + value));
+      updateQuantity(id, newQuantity);
+    }
   };
 
   const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    removeFromCart(id);
   };
 
-  const calculateTotal = () => {
-    let total = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    if (promoApplied) {
-      total *= 0.9; // 10% de réduction
-    }
-    return total;
+  const calculateSubtotal = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
   const calculateDiscount = () => {
     return cartItems.reduce((total, item) => 
       total + (item.originalPrice ? (item.originalPrice - item.price) * item.quantity : 0), 0);
+  };
+
+  const calculateTotal = () => {
+    let total = calculateSubtotal();
+    if (promoApplied) {
+      total *= 0.9; // 10% de réduction
+    }
+    return total;
   };
 
   const handleInputChange = (e) => {
@@ -92,18 +85,32 @@ const Cart = () => {
     
     // Simulation de traitement de commande
     setTimeout(() => {
-      console.log('Commande soumise:', { ...formData, items: cartItems, total: calculateTotal() });
+      console.log('Commande soumise:', { 
+        ...formData, 
+        items: cartItems, 
+        total: calculateTotal(),
+        promoCode: promoApplied ? promoCode : null
+      });
       setIsProcessing(false);
       setOrderCompleted(true);
-      setCartItems([]);
+      setConfetti(true);
+      clearCart();
     }, 2000);
   };
 
   const applyPromoCode = () => {
-    if (promoCode === "SOLDE10") {
+    if (promoCode.trim() === "SOLDE10") {
       setPromoApplied(true);
+    } else {
+      setPromoApplied(false);
     }
   };
+
+  const removePromoCode = () => {
+    setPromoCode('');
+    setPromoApplied(false);
+  };
+
 
   // Animations
   const itemVariants = {
@@ -182,16 +189,62 @@ const Cart = () => {
     }
   };
 
+  // Configuration du confetti
+  const confettiConfig = {
+    angle: 90,
+    spread: 180,
+    startVelocity: 40,
+    elementCount: 70,
+    dragFriction: 0.12,
+    duration: 3000,
+    stagger: 3,
+    width: "10px",
+    height: "10px",
+    colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"]
+  };
+  
+  const ImageOptimized = ({ src, alt, className, fallback = '/fallback-product-image.jpg' }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  const handleError = () => {
+    console.error(`Failed to load image: ${src}`);
+    setError(true);
+  };
+
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen py-12 mt-10">
+    <img
+      src={error ? fallback : src}
+      alt={alt}
+      className={`${className} transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      loading="eager"
+      onLoad={() => setLoaded(true)}
+      onError={handleError}
+    />
+  );
+};
+
+// Au début de votre composant Cart, avant le return
+useEffect(() => {
+  console.log('Cart items with images:', cartItems.map(item => ({
+    id: item.id,
+    title: item.title,
+    images: item.images,
+    imagePaths: item.images?.map(img => typeof img === 'string' ? img : img?.default)
+  })));
+}, [cartItems]);
+  return (
+    <div className="bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-7xl">
+        {/* Confetti */}
+        <div className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50">
+          <Confetti active={confetti} config={confettiConfig} />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ 
-            duration: 0.5,
-            ease: [0.6, -0.05, 0.01, 0.99]
-          }}
+          transition={{ duration: 0.5 }}
           className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8"
         >
           <h1 className="text-3xl md:text-4xl font-bold text-center md:text-left mb-4 md:mb-0">
@@ -202,7 +255,7 @@ const Cart = () => {
               whileHover={{ scale: 1.02 }}
               className="text-sm bg-primary/10 text-primary dark:text-primary-light px-4 py-2 rounded-full flex items-center"
             >
-              <FiCheck className="mr-2" /> {cartItems.reduce((acc, item) => acc + item.quantity, 0)} articles sélectionnés
+              <FiCheck className="mr-2" /> {cartCount} article{cartCount > 1 ? 's' : ''} sélectionné{cartCount > 1 ? 's' : ''}
             </motion.p>
           )}
         </motion.div>
@@ -211,11 +264,7 @@ const Cart = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ 
-              type: "spring",
-              stiffness: 100,
-              damping: 10
-            }}
+            transition={{ type: "spring" }}
             className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-2xl mx-auto p-8"
           >
             <motion.div 
@@ -227,21 +276,23 @@ const Cart = () => {
               </svg>
             </motion.div>
             <h3 className="text-2xl font-bold mb-2">Commande confirmée !</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">Merci pour votre achat. Votre commande a été enregistrée.</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Merci pour votre achat. Un email de confirmation vous a été envoyé à {formData.email}.
+            </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button 
                 text="Suivre ma commande" 
                 bgColor="bg-primary" 
                 textColor="text-white" 
                 icon={<FiArrowRight className="ml-2" />}
-                href="/compte/commandes"
+                onClick={() => navigate('/compte/commandes')}
                 animation="hover"
               />
               <Button 
                 text="Continuer mes achats" 
                 bgColor="bg-gray-200 dark:bg-gray-700" 
                 textColor="text-gray-800 dark:text-gray-200" 
-                href="/boutique"
+                onClick={() => navigate('/boutique')}
                 animation="hover"
               />
             </div>
@@ -279,22 +330,21 @@ const Cart = () => {
                 text="Aller à la boutique" 
                 bgColor="bg-primary" 
                 textColor="text-white" 
-                href="/boutique"
+                onClick={() => navigate('/boutique')}
               />
             </motion.div>
           </motion.div>
         ) : (
-          <motion.div 
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col lg:flex-row gap-8"
-          >
+          <div className="flex flex-col lg:flex-row gap-8">
             {/* Liste des articles */}
             <div className="w-full lg:w-2/3">
               <motion.div 
                 layout
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
                 variants={cardVariants}
+                initial="offscreen"
+                whileInView="onscreen"
+                viewport={{ once: true, amount: 0.2 }}
               >
                 <div className="hidden md:grid grid-cols-12 bg-gray-100 dark:bg-gray-700 p-4 font-medium">
                   <div className="col-span-5">Produit</div>
@@ -306,7 +356,7 @@ const Cart = () => {
                 <AnimatePresence>
                   {cartItems.map((item, index) => (
                     <motion.div
-                      key={item.id}
+                      key={`${item.id}-${item.selectedColor || 'default'}`}
                       variants={itemVariants}
                       initial="hidden"
                       animate="visible"
@@ -317,37 +367,33 @@ const Cart = () => {
                       className="grid grid-cols-12 items-center p-4 border-b border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:bg-gray-750 transition-colors"
                     >
                       <div className="col-span-12 md:col-span-5 flex items-center mb-4 md:mb-0">
-                        <motion.div 
-                          className="relative"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <img 
-                            src={item.img} 
-                            alt={item.title} 
-                            className="w-16 h-16 object-contain mr-4 rounded-lg bg-white p-1 shadow-sm"
-                          />
-                          {item.originalPrice && (
-                            <motion.span 
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg"
-                            >
-                              <FiPercent className="inline" /> {Math.round((1 - item.price/item.originalPrice)*100)}%
-                            </motion.span>
-                          )}
-                        </motion.div>
+                      <motion.div className="relative" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <ImageOptimized
+                          src={item.images?.[0]}
+                          alt={item.title}
+                          className="w-16 h-16 object-contain mr-4 rounded-lg bg-white p-1 shadow-sm"
+                        />
+                        {item.originalPrice && (
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg"
+                          >
+                            <FiPercent className="inline" /> {Math.round((1 - item.price/item.originalPrice)*100)}%
+                          </motion.span>
+                        )}
+                      </motion.div>
                         <div>
                           <h3 className="font-medium">{item.title}</h3>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {item.color && (
+                            {item.selectedColor && (
                               <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                                {item.color}
+                                {item.selectedColor}
                               </span>
                             )}
-                            {item.warranty && (
+                            {item.specifications?.warranty && (
                               <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-                                Garantie: {item.warranty}
+                                Garantie: {item.specifications.warranty}
                               </span>
                             )}
                           </div>
@@ -363,10 +409,10 @@ const Cart = () => {
                       </div>
                       
                       <div className="col-span-4 md:col-span-2 text-center mb-4 md:mb-0">
-                        <p className="font-medium">{item.price.toLocaleString()} FCFA</p>
+                        <p className="font-medium">{formatPrice(item.price)}</p>
                         {item.originalPrice && (
                           <p className="text-sm text-gray-400 dark:text-gray-500 line-through">
-                            {item.originalPrice.toLocaleString()} FCFA
+                            {formatPrice(item.originalPrice)}
                           </p>
                         )}
                       </div>
@@ -377,6 +423,7 @@ const Cart = () => {
                             whileTap={{ scale: 0.8 }}
                             onClick={() => handleQuantityChange(item.id, -1)}
                             className="w-10 h-10 flex items-center justify-center border-r bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            aria-label="Réduire la quantité"
                           >
                             <FiMinus />
                           </motion.button>
@@ -393,6 +440,7 @@ const Cart = () => {
                             whileTap={{ scale: 0.8 }}
                             onClick={() => handleQuantityChange(item.id, 1)}
                             className="w-10 h-10 flex items-center justify-center border-l bg-gray-100 dark:bg-gray-700 hover:border-primary dark:hover:bg-gray-600 transition-colors"
+                            aria-label="Augmenter la quantité"
                           >
                             <FiPlus />
                           </motion.button>
@@ -406,7 +454,7 @@ const Cart = () => {
                           animate={{ scale: 1, color: "inherit" }}
                           transition={{ duration: 0.3 }}
                         >
-                          {(item.price * item.quantity).toLocaleString()} FCFA
+                          {formatPrice(item.price * item.quantity)}
                         </motion.p>
                       </div>
                     </motion.div>
@@ -418,11 +466,7 @@ const Cart = () => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  delay: 0.2,
-                  type: "spring",
-                  stiffness: 100
-                }}
+                transition={{ delay: 0.2 }}
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-6"
               >
                 <h3 className="text-lg font-semibold mb-4">Code promo</h3>
@@ -433,18 +477,32 @@ const Cart = () => {
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
                     className="flex-1 border border-gray-300 dark:border-gray-700 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
+                    aria-label="Code promo"
                   />
-                  <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={applyPromoCode}
-                    disabled={promoApplied}
-                    className={`px-6 py-3 rounded-r-lg transition-all ${promoApplied 
-                      ? 'bg-green-500 text-white cursor-not-allowed' 
-                      : 'bg-primary text-white hover:bg-primary/90'}`}
-                  >
-                    {promoApplied ? 'Appliqué' : 'Appliquer'}
-                  </motion.button>
+                  {promoApplied ? (
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={removePromoCode}
+                      className="px-6 py-3 rounded-r-lg bg-red-500 text-white hover:bg-red-600 transition-all flex items-center"
+                    >
+                      <FiX className="mr-1" /> Retirer
+                    </motion.button>
+                  ) : (
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={applyPromoCode}
+                      disabled={!promoCode.trim()}
+                      className={`px-6 py-3 rounded-r-lg transition-all ${
+                        !promoCode.trim() 
+                          ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed' 
+                          : 'bg-primary text-white hover:bg-primary/90'
+                      }`}
+                    >
+                      Appliquer
+                    </motion.button>
+                  )}
                 </div>
                 {promoApplied && (
                   <motion.p 
@@ -456,230 +514,258 @@ const Cart = () => {
                   </motion.p>
                 )}
               </motion.div>
+
+              {/* Bouton mobile pour afficher/masquer le récapitulatif */}
+              <div className="md:hidden mt-6">
+                <Button
+                  text={showOrderSummary ? "Masquer le total" : "Voir le total"}
+                  onClick={() => setShowOrderSummary(!showOrderSummary)}
+                  bgColor="bg-gray-200 dark:bg-gray-700"
+                  textColor="text-gray-800 dark:text-gray-200"
+                  className="w-full"
+                  icon={showOrderSummary ? <FiX className="ml-2" /> : <FiInfo className="ml-2" />}
+                />
+              </div>
             </div>
             
             {/* Récapitulatif et formulaire */}
-            <div className="w-full lg:w-1/3">
-              <motion.div 
-                initial="offscreen"
-                whileInView="onscreen"
-                viewport={{ once: true, amount: 0.2 }}
-                variants={cardVariants}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sticky top-4"
-              >
-                <h3 className="text-xl font-bold mb-6">Récapitulatif de commande</h3>
-                
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between">
-                    <span>Sous-total ({cartItems.reduce((acc, item) => acc + item.quantity, 0)} articles)</span>
-                    <span>{cartItems.reduce((total, item) => total + (item.price * item.quantity), 0).toLocaleString()} FCFA</span>
-                  </div>
-                  
-                  {calculateDiscount() > 0 && (
-                    <div className="flex justify-between text-green-500">
-                      <span>Économies</span>
-                      <span>-{calculateDiscount().toLocaleString()} FCFA</span>
-                    </div>
-                  )}
-                  
-                  {promoApplied && (
-                    <div className="flex justify-between text-green-500">
-                      <span>Réduction promo</span>
-                      <span>-{(cartItems.reduce((total, item) => total + (item.price * item.quantity), 0) * 0.1).toLocaleString()} FCFA</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between">
-                    <span>Livraison</span>
-                    <span className="text-green-500">Gratuit</span>
-                  </div>
-                  
-                  <div className="flex justify-between font-bold text-lg pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <span>Total</span>
-                    <motion.span 
-                      key={`total-${calculateTotal()}`}
-                      initial={{ scale: 1.1 }}
-                      animate={{ scale: 1 }}
-                      className="text-primary"
-                    >
-                      {calculateTotal().toLocaleString()} FCFA
-                    </motion.span>
-                  </div>
-                </div>
-                
-                <motion.form 
-                  onSubmit={handleSubmit}
-                  variants={formVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="space-y-4"
+            {(showOrderSummary || !window.matchMedia('(max-width: 768px)').matches) && (
+              <div className="w-full lg:w-1/3">
+                <motion.div 
+                  initial="offscreen"
+                  whileInView="onscreen"
+                  viewport={{ once: true, amount: 0.2 }}
+                  variants={cardVariants}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sticky top-4"
                 >
-                  <motion.div variants={inputVariants}>
-                    <label className="block mb-2 text-sm font-medium">Nom complet</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
-                    />
-                  </motion.div>
+                  <h3 className="text-xl font-bold mb-6">Récapitulatif de commande</h3>
                   
-                  <motion.div variants={inputVariants}>
-                    <label className="block mb-2 text-sm font-medium">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
-                    />
-                  </motion.div>
+                  <div className="space-y-4 mb-6">
+                    <div className="flex justify-between">
+                      <span>Sous-total ({cartCount} article{cartCount > 1 ? 's' : ''})</span>
+                      <span>{formatPrice(calculateSubtotal())}</span>
+                    </div>
+                    
+                    {calculateDiscount() > 0 && (
+                      <div className="flex justify-between text-green-500">
+                        <span>Économies</span>
+                        <span>-{formatPrice(calculateDiscount())}</span>
+                      </div>
+                    )}
+                    
+                    {promoApplied && (
+                      <div className="flex justify-between text-green-500">
+                        <span>Réduction promo</span>
+                        <span>-{formatPrice(calculateSubtotal() * 0.1)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <span>Livraison</span>
+                      <span className="text-green-500">Gratuit</span>
+                    </div>
+                    
+                    <div className="flex justify-between font-bold text-lg pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <span>Total</span>
+                      <motion.span 
+                        key={`total-${calculateTotal()}`}
+                        initial={{ scale: 1.1 }}
+                        animate={{ scale: 1 }}
+                        className="text-primary"
+                      >
+                        {formatPrice(calculateTotal())}
+                      </motion.span>
+                    </div>
+                  </div>
                   
-                  <motion.div variants={inputVariants}>
-                    <label className="block mb-2 text-sm font-medium">Téléphone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
-                    />
-                  </motion.div>
-                  
-                  <motion.div variants={inputVariants}>
-                    <label className="block mb-2 text-sm font-medium">Adresse</label>
-                    <textarea
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      required
-                      rows="3"
-                      className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
-                    ></textarea>
-                  </motion.div>
-                  
-                  <motion.div variants={inputVariants} className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block mb-2 text-sm font-medium">Ville</label>
+                  <motion.form 
+                    onSubmit={handleSubmit}
+                    variants={formVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-4"
+                  >
+                    <motion.div variants={inputVariants}>
+                      <label className="block mb-2 text-sm font-medium">Nom complet *</label>
                       <input
                         type="text"
-                        name="city"
-                        value={formData.city}
+                        name="name"
+                        value={formData.name}
                         onChange={handleInputChange}
                         required
                         className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
+                        placeholder="Votre nom complet"
                       />
-                    </div>
+                    </motion.div>
                     
-                    <div>
-                      <label className="block mb-2 text-sm font-medium">Pays</label>
-                      <select
-                        name="country"
-                        value={formData.country}
+                    <motion.div variants={inputVariants}>
+                      <label className="block mb-2 text-sm font-medium">Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md appearance-none"
-                      >
-                        <option value="Niger">Niger</option>
-                        <option value="Burkina Faso">Burkina Faso</option>
-                        <option value="Côte d'Ivoire">Côte d'Ivoire</option>
-                        <option value="Sénégal">Sénégal</option>
-                      </select>
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div variants={inputVariants} className="pt-4">
-                    <h4 className="font-medium mb-3">Méthode de paiement</h4>
-                    <div className="space-y-3">
-                      <motion.label 
-                        whileHover={{ y: -2 }}
-                        className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary transition-all cursor-pointer"
-                      >
+                        required
+                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
+                        placeholder="votre@email.com"
+                      />
+                    </motion.div>
+                    
+                    <motion.div variants={inputVariants}>
+                      <label className="block mb-2 text-sm font-medium">Téléphone *</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
+                        placeholder="+227 XX XX XX XX"
+                      />
+                    </motion.div>
+                    
+                    <motion.div variants={inputVariants}>
+                      <label className="block mb-2 text-sm font-medium">Adresse *</label>
+                      <textarea
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        required
+                        rows="3"
+                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
+                        placeholder="Votre adresse complète"
+                      ></textarea>
+                    </motion.div>
+                    
+                    <motion.div variants={inputVariants} className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block mb-2 text-sm font-medium">Ville *</label>
                         <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="cash"
-                          checked={formData.paymentMethod === 'cash'}
+                          type="text"
+                          name="city"
+                          value={formData.city}
                           onChange={handleInputChange}
-                          className="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300"
+                          required
+                          className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md"
+                          placeholder="Votre ville"
                         />
-                        <div>
-                          <p className="font-medium">Paiement à la livraison</p>
-                          <p className="text-sm text-gray-500">Espèces ou carte à la livraison</p>
-                        </div>
-                      </motion.label>
+                      </div>
                       
-                      <motion.label 
-                        whileHover={{ y: -2 }}
-                        className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary transition-all cursor-pointer"
-                      >
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="mobile"
-                          checked={formData.paymentMethod === 'mobile'}
+                      <div>
+                        <label className="block mb-2 text-sm font-medium">Pays *</label>
+                        <select
+                          name="country"
+                          value={formData.country}
                           onChange={handleInputChange}
-                          className="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300"
-                        />
-                        <div>
-                          <p className="font-medium">Mobile Money</p>
-                          <p className="text-sm text-gray-500">Orange Money, MTN Mobile Money</p>
-                        </div>
-                      </motion.label>
-                      
-                      <motion.label 
-                        whileHover={{ y: -2 }}
-                        className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary transition-all cursor-pointer"
+                          className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent transition-all duration-200 focus:shadow-md appearance-none"
+                        >
+                          <option value="Niger">Niger</option>
+                          <option value="Burkina Faso">Burkina Faso</option>
+                          <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                          <option value="Sénégal">Sénégal</option>
+                        </select>
+                      </div>
+                    </motion.div>
+                    
+                    <motion.div variants={inputVariants} className="pt-4">
+                      <h4 className="font-medium mb-3">Méthode de paiement *</h4>
+                      <div className="space-y-3">
+                        <motion.label 
+                          whileHover={{ y: -2 }}
+                          className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary transition-all cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="cash"
+                            checked={formData.paymentMethod === 'cash'}
+                            onChange={handleInputChange}
+                            className="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <div className="flex items-center">
+                            <FiDollarSign className="mr-2 text-gray-500" />
+                            <div>
+                              <p className="font-medium">Paiement à la livraison</p>
+                              <p className="text-sm text-gray-500">Espèces ou carte à la livraison</p>
+                            </div>
+                          </div>
+                        </motion.label>
+                        
+                        <motion.label 
+                          whileHover={{ y: -2 }}
+                          className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary transition-all cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="mobile"
+                            checked={formData.paymentMethod === 'mobile'}
+                            onChange={handleInputChange}
+                            className="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <div className="flex items-center">
+                            <FiSmartphone className="mr-2 text-gray-500" />
+                            <div>
+                              <p className="font-medium">Mobile Money</p>
+                              <p className="text-sm text-gray-500">Orange Money, MTN Mobile Money</p>
+                            </div>
+                          </div>
+                        </motion.label>
+                        
+                        <motion.label 
+                          whileHover={{ y: -2 }}
+                          className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary transition-all cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="card"
+                            checked={formData.paymentMethod === 'card'}
+                            onChange={handleInputChange}
+                            className="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <div className="flex items-center">
+                            <FiCreditCard className="mr-2 text-gray-500" />
+                            <div>
+                              <p className="font-medium">Carte bancaire</p>
+                              <p className="text-sm text-gray-500">Visa, Mastercard</p>
+                            </div>
+                          </div>
+                        </motion.label>
+                      </div>
+                    </motion.div>
+                    
+                    <motion.div variants={inputVariants}>
+                      <motion.button
+                        type="submit"
+                        whileHover={{ scale: 1.01, boxShadow: "0 5px 15px rgba(59, 130, 246, 0.3)" }}
+                        whileTap={{ scale: 0.99 }}
+                        disabled={isProcessing}
+                        className={`w-full py-4 mt-6 rounded-lg bg-primary text-white font-medium flex items-center justify-center ${
+                          isProcessing ? 'opacity-75 cursor-not-allowed' : ''
+                        } transition-all duration-200`}
                       >
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="card"
-                          checked={formData.paymentMethod === 'card'}
-                          onChange={handleInputChange}
-                          className="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300"
-                        />
-                        <div>
-                          <p className="font-medium">Carte bancaire</p>
-                          <p className="text-sm text-gray-500">Visa, Mastercard</p>
-                        </div>
-                      </motion.label>
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div variants={inputVariants}>
-                    <motion.button
-                      type="submit"
-                      whileHover={{ scale: 1.01, boxShadow: "0 5px 15px rgba(59, 130, 246, 0.3)" }}
-                      whileTap={{ scale: 0.99 }}
-                      disabled={isProcessing}
-                      className={`w-full py-4 mt-6 rounded-lg bg-primary text-white font-medium flex items-center justify-center ${
-                        isProcessing ? 'opacity-75 cursor-not-allowed' : ''
-                      } transition-all duration-200`}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Traitement en cours...
-                        </>
-                      ) : (
-                        <>
-                          Passer la commande
-                          <FiArrowRight className="ml-2" />
-                        </>
-                      )}
-                    </motion.button>
-                  </motion.div>
-                </motion.form>
-              </motion.div>
-            </div>
-          </motion.div>
+                        {isProcessing ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Traitement en cours...
+                          </>
+                        ) : (
+                          <>
+                            Passer la commande
+                            <FiArrowRight className="ml-2" />
+                          </>
+                        )}
+                      </motion.button>
+                    </motion.div>
+                  </motion.form>
+                </motion.div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -1,51 +1,101 @@
-import React, { createContext, useState, useContext, useMemo, useCallback } from 'react';
+// Gremah_Electro/src/context/CartContext.jsx
+import React, { createContext, useState, useContext, useMemo, useCallback, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
-// Crée le contexte en dehors du composant
+/**
+ * Contexte du panier d'achat
+ * @type {React.Context}
+ */
 const CartContext = createContext();
 
 /**
- * Fournit l'état du panier et les actions à ses enfants.
- * @param {object} props - Propriétés du composant.
- * @param {React.ReactNode} props.children - Composants enfants à rendre dans le fournisseur.
+ * Fournisseur de contexte du panier
+ * @param {object} props - Les propriétés du composant
+ * @param {React.ReactNode} props.children - Les composants enfants
+ * @returns {JSX.Element} Le fournisseur de contexte
  */
 export const CartProvider = ({ children }) => {
-  // État pour contenir les articles dans le panier
   const [cartItems, setCartItems] = useState([]);
 
+  // Chargement initial depuis localStorage
+  useEffect(() => {
+    const loadCart = () => {
+      try {
+        const savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+          const parsedCart = JSON.parse(savedCart);
+          if (Array.isArray(parsedCart)) {
+            setCartItems(parsedCart);
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du panier:', error);
+        localStorage.removeItem('cart');
+      }
+    };
+
+    loadCart();
+  }, []);
+
+  // Sauvegarde dans localStorage
+  useEffect(() => {
+    const saveCart = () => {
+      try {
+        localStorage.setItem('cart', JSON.stringify(cartItems));
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde du panier:', error);
+      }
+    };
+
+    saveCart();
+  }, [cartItems]);
+
   /**
-   * Ajoute un produit au panier ou met à jour sa quantité s'il existe déjà.
-   * @param {object} product - L'objet produit à ajouter (doit avoir un 'id' et 'price').
-   * @param {number} [quantity=1] - La quantité à ajouter. Par défaut : 1.
+   * Ajoute un produit au panier ou met à jour sa quantité s'il existe déjà
+   * @param {object} product - Le produit à ajouter
+   * @param {number} [quantity=1] - La quantité à ajouter
    */
   const addToCart = useCallback((product, quantity = 1) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
+    if (!product?.id || typeof product?.price !== 'number') {
+      console.error('Produit invalide pour le panier', product);
+      return false;
+    }
 
-      if (existingItem) {
-        return prevItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
+    setCartItems(prevItems => {
+      const existingItemIndex = prevItems.findIndex(item => 
+        item.id === product.id && 
+        item.selectedColor === product.selectedColor
+      );
+
+      if (existingItemIndex >= 0) {
+        const newItems = [...prevItems];
+        newItems[existingItemIndex] = {
+          ...newItems[existingItemIndex],
+          quantity: newItems[existingItemIndex].quantity + quantity
+        };
+        return newItems;
       }
-      return [...prevItems, { ...product, quantity }];
+      return [...prevItems, { 
+        ...product, 
+        quantity,
+        addedAt: new Date().toISOString() 
+      }];
     });
+    return true;
   }, []);
-  
 
   /**
-   * Supprime un produit du panier.
-   * @param {string | number} productId - L'ID du produit à supprimer.
+   * Supprime un produit du panier
+   * @param {string|number} productId - L'ID du produit à supprimer
    */
   const removeFromCart = useCallback((productId) => {
     setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
   }, []);
 
   /**
-   * Met à jour la quantité d'un produit spécifique dans le panier.
-   * Assure que la quantité ne descend pas en dessous de 1. Si la quantité est 0, l'article est supprimé.
-   * @param {string | number} productId - L'ID du produit à mettre à jour.
-   * @param {number} newQuantity - La nouvelle quantité pour le produit.
+   * Met à jour la quantité d'un produit dans le panier
+   * @param {string|number} productId - L'ID du produit
+   * @param {number} newQuantity - La nouvelle quantité
    */
   const updateQuantity = useCallback((productId, newQuantity) => {
     if (newQuantity < 1) {
@@ -60,20 +110,12 @@ export const CartProvider = ({ children }) => {
     );
   }, [removeFromCart]);
 
-  /**
-   * Vide tous les articles du panier.
-   */
+  /** Vide complètement le panier */
   const clearCart = useCallback(() => {
     setCartItems([]);
   }, []);
 
-  // --- Valeurs dérivées (Mémoïsées pour la performance) ---
-
-  /**
-   * Calcule le prix total de tous les articles dans le panier.
-   * Mémoïsé pour éviter les recalculs inutiles à chaque rendu si cartItems n'a pas changé.
-   * @returns {number} Le prix total.
-   */
+  // Calcul du total du panier
   const cartTotal = useMemo(() => {
     return cartItems.reduce(
       (total, item) => total + (item.price * item.quantity),
@@ -81,11 +123,7 @@ export const CartProvider = ({ children }) => {
     );
   }, [cartItems]);
 
-  /**
-   * Calcule le nombre total d'articles (somme des quantités) dans le panier.
-   * Mémoïsé pour éviter les recalculs inutiles à chaque rendu si cartItems n'a pas changé.
-   * @returns {number} Le nombre total d'articles.
-   */
+  // Calcul du nombre total d'articles
   const cartCount = useMemo(() => {
     return cartItems.reduce(
       (count, item) => count + item.quantity,
@@ -93,8 +131,17 @@ export const CartProvider = ({ children }) => {
     );
   }, [cartItems]);
 
-  // La valeur fournie aux consommateurs du CartContext
-  // Mémoïse l'objet 'value' lui-même pour éviter les re-rendus inutiles des consommateurs
+  // Vérifie si un produit est dans le panier
+  const isInCart = useCallback((productId) => {
+    return cartItems.some(item => item.id === productId);
+  }, [cartItems]);
+
+  // Récupère un produit du panier par son ID
+  const getCartItem = useCallback((productId) => {
+    return cartItems.find(item => item.id === productId);
+  }, [cartItems]);
+
+  // Valeur du contexte
   const contextValue = useMemo(() => ({
     cartItems,
     addToCart,
@@ -103,7 +150,19 @@ export const CartProvider = ({ children }) => {
     clearCart,
     cartTotal,
     cartCount,
-  }), [cartItems, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal, cartCount]);
+    isInCart,
+    getCartItem
+  }), [
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    cartTotal,
+    cartCount,
+    isInCart,
+    getCartItem
+  ]);
 
   return (
     <CartContext.Provider value={contextValue}>
@@ -112,7 +171,11 @@ export const CartProvider = ({ children }) => {
   );
 };
 
+// PropTypes pour la validation
+CartProvider.propTypes = {
+  children: PropTypes.node.isRequired
+};
 
 
-// Exporte le contexte lui-même pour qu'il puisse être importé par useCart
-export { CartContext };
+
+export default CartContext;

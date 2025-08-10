@@ -1,4 +1,3 @@
-// src/components/Products/ProductCard.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,7 +6,6 @@ import Button from '../Shared/Button';
 import { FiStar, FiShoppingCart, FiInfo, FiChevronRight } from 'react-icons/fi';
 import { useCart } from '../../hooks/useCart';
 import { getProductImage } from '../../utils/FixImagePath';
-
 
 const FALLBACK_IMAGE = '/fallback-product-image.jpg';
 
@@ -37,6 +35,22 @@ const ProductCard = ({ product, showAddToCart = false }) => {
       return;
     }
     navigate(`/produit/${encodeURIComponent(product.slug)}`);
+  };
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    
+    // Préparation des images comme dans ProductDetail
+    const productImages = product.images && product.images.length > 0
+      ? product.images
+      : product.img
+        ? [product.img]
+        : [FALLBACK_IMAGE];
+
+    addToCart({
+      ...product,
+      images: productImages // On passe les images formatées
+    });
   };
 
   const renderFeatures = () => {
@@ -98,13 +112,13 @@ const ProductCard = ({ product, showAddToCart = false }) => {
       {/* Image Section */}
       <div className="relative h-48 w-full overflow-hidden flex-shrink-0">
         <img
-             src={imageSrc}
-             alt={product.title || 'Product image'}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-115"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = FALLBACK_IMAGE;
-            }}
+          src={imageSrc}
+          alt={product.title || 'Product image'}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-115"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = FALLBACK_IMAGE;
+          }}
         />
 
         {discountPercentage > 0 && (
@@ -131,10 +145,7 @@ const ProductCard = ({ product, showAddToCart = false }) => {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                addToCart(product);
-              }}
+              onClick={handleAddToCart}
               className="bg-primary text-white p-3 rounded-full shadow-lg mx-2 hover:bg-primary-dark transition-colors tooltip"
               data-tooltip-content="Ajouter au Panier"
               aria-label="Ajouter au panier"
@@ -229,6 +240,7 @@ ProductCard.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     slug: PropTypes.string,
     img: PropTypes.string,
+    images: PropTypes.array,
     title: PropTypes.string.isRequired,
     price: PropTypes.number.isRequired,
     originalPrice: PropTypes.number,
