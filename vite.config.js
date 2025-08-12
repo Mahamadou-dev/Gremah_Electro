@@ -1,3 +1,4 @@
+// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
@@ -11,7 +12,10 @@ export default defineConfig({
     })
   ],
   server: {
-    historyApiFallback: true,
+    historyApiFallback: true // ⚠ Dans Vite, ça marche, mais doit être écrit côté devServer
+  },
+  preview: {
+    historyApiFallback: true // Pour le mode preview aussi
   },
   build: {
     chunkSizeWarningLimit: 1600,
