@@ -1,5 +1,5 @@
 import React, { createContext, useState, useMemo, useCallback } from 'react';
-import Loader from '../components/Shared/Loader'; // Assuming your Loader component is here
+import Loader from '../components/Shared/Loader.jsx'; // Assuming your Loader component is here
 
 // Create the context outside the component
 const LoadingContext = createContext();
