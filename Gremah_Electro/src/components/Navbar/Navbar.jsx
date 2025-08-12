@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { IoMdSearch, IoMdClose } from "react-icons/io";
 import { FaCaretDown, FaCartShopping, FaUser } from "react-icons/fa6";
 import { HiMenuAlt3 } from "react-icons/hi";
@@ -7,9 +7,11 @@ import DarkMode from './DarkMode';
 import { useCart } from '../../hooks/useCart';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../../assets/about/GremahElectro.png'; // Assuming logo is in the public folder
+import logo from '../../assets/about/GremahElectro.png';
+import { allProducts } from '../../data/products/products';
+import { blogs } from '../../data/blogs/blogs';
 
-const MenuLinks = [
+const MENU_LINKS = [
   { id: 1, name: 'Accueil', to: '/' },
   { id: 2, name: 'Boutique', to: '/boutique' },
   { id: 3, name: 'À propos', to: '/a-propos' },
@@ -17,456 +19,477 @@ const MenuLinks = [
   { id: 5, name: 'Blogues', to: '/blogs' },
 ];
 
-const DropDownLinks = [
+const DROPDOWN_LINKS = [
   { id: 1, name: 'Produits Tendance', to: '/boutique?filter=trending' },
   { id: 2, name: 'Nouveautés', to: '/boutique?filter=new' },
   { id: 3, name: 'Promotions', to: '/boutique?filter=sale' },
   { id: 4, name: 'Meilleures Ventes', to: '/boutique?filter=best' }
 ];
 
+const MAX_SEARCH_RESULTS = 5;
+
 const Navbar = () => {
   const { cartCount } = useCart();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchActive, setSearchActive] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  
   const searchRef = useRef(null);
   const menuRef = useRef(null);
+  const inputRef = useRef(null);
 
-  const toggleMenu = () => setIsMenuOpen(prev => !prev);
-  const toggleSearch = () => setIsSearchExpanded(prev => !prev);
+  // Optimisation des résultats de recherche
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    
+    const query = searchQuery.toLowerCase();
+    const normalizedQuery = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    const productResults = allProducts
+      .filter(product => 
+        product.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedQuery) || 
+        product.category.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedQuery)
+      )
+      .map(p => ({ ...p, type: 'product' }));
+    
+    const blogResults = blogs
+      .filter(blog => 
+        blog.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedQuery) || 
+        blog.category.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedQuery)
+      )
+      .map(b => ({ ...b, type: 'blog' }));
+    
+    return [...productResults, ...blogResults].slice(0, MAX_SEARCH_RESULTS);
+  }, [searchQuery]);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/boutique?search=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-      setIsSearchExpanded(false);
+  // Gestion des événements clavier
+  const handleKeyEvents = useCallback((e) => {
+    if (e.key === 'Escape') {
+      setSearchActive(false);
       setIsMenuOpen(false);
     }
-  };
-
-  const handleEscape = useCallback((e) => {
-    if (e.key === 'Escape') {
-      setIsMenuOpen(false);
-      setIsSearchExpanded(false);
+    if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      setSearchActive(true);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, []);
 
-  // Fermer le menu quand on clique à l'extérieur
+  // Gestion du scroll
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Gestion des événements globaux
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyEvents);
+    return () => document.removeEventListener('keydown', handleKeyEvents);
+  }, [handleKeyEvents]);
+
+  // Gestion des clics externes
   useEffect(() => {
     const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchActive(false);
+      }
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setIsMenuOpen(false);
-      }
-      if (searchRef.current && !searchRef.current.contains(e.target) && isSearchExpanded) {
-        setIsSearchExpanded(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSearchExpanded]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? 'hidden' : 'auto';
-    if (isMenuOpen || isSearchExpanded) {
-      window.addEventListener('keydown', handleEscape);
-    } else {
-      window.removeEventListener('keydown', handleEscape);
+  // Navigation vers un résultat
+  const navigateToResult = useCallback((item) => {
+    setSearchActive(false);
+    setSearchQuery('');
+    
+    setTimeout(() => {
+      const path = item.type === 'product' 
+        ? `/produit/${item.slug}` 
+        : `/blogs/${item.slug}`;
+      navigate(path);
+    }, 150);
+  }, [navigate]);
+
+  // Soumission de la recherche
+  const handleSearchSubmit = useCallback((e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/boutique?search=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery('');
+      setSearchActive(false);
     }
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isMenuOpen, isSearchExpanded, handleEscape]);
+  }, [searchQuery, navigate]);
+
+  // Composant de résultat optimisé
+  const SearchResult = React.memo(({ item }) => (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition"
+      onClick={() => navigateToResult(item)}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-md flex items-center justify-center ${
+          item.type === 'product' ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-purple-50 dark:bg-purple-900/30'
+        }`}>
+          {item.type === 'product' ? (
+            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {item.title}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+            {item.type === 'product' ? 'Produit' : 'Blog'} • {item.category}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  ));
 
   return (
     <motion.header 
       className={clsx(
-        "fixed w-full top-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md z-50 transition-all duration-300 border-b",
+        "fixed w-full top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md z-50 border-b transition-all",
         isScrolled ? "border-gray-200 dark:border-gray-700 shadow-sm" : "border-transparent"
       )}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.5, type: 'spring' }}
+      transition={{ type: 'spring' }}
     >
-      <div className="py-3 px-4 md:px-6 flex justify-between items-center container mx-auto">
-        {/* Logo et bouton menu mobile */}
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        {/* Logo et menu mobile */}
         <div className="flex items-center gap-4">
-          <motion.button
-            onClick={toggleMenu}
-            className="lg:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
             aria-label="Menu"
-            aria-expanded={isMenuOpen}
           >
             <HiMenuAlt3 className="text-2xl text-gray-800 dark:text-white" />
-          </motion.button>
+          </button>
 
-          <Link
-            to="/"
-            className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-red-600 bg-clip-text text-transparent hover:tracking-wider transition-all"
-          >
-            <motion.span 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <img src={logo} alt="Gremah Electro" className='h-16 w-30 lg:block hidden' />
-            </motion.span>
+          <Link to="/" className="flex items-center">
+            <img 
+              src={logo} 
+              alt="Gremah Electro" 
+              className="h-12 w-auto hidden lg:block" 
+              loading="lazy"
+            />
+            <span className="text-xl font-bold lg:hidden bg-gradient-to-r from-primary to-red-600 bg-clip-text text-transparent">
+              Gremah
+            </span>
           </Link>
         </div>
 
         {/* Navigation principale */}
-        <nav className="hidden lg:flex gap-8 items-center">
-          {MenuLinks.map(link => (
+        <nav className="hidden lg:flex items-center gap-6">
+          {MENU_LINKS.map(link => (
             <Link
               key={link.id}
               to={link.to}
               className={clsx(
-                "relative group text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary font-medium transition-all",
+                "relative py-2 px-1 font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition",
                 location.pathname === link.to && "text-primary dark:text-primary"
               )}
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-1 py-2"
-              >
-                {link.name}
-                <span className={clsx(
-                  "absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full bg-primary transition-all duration-300 block",
-                  location.pathname === link.to && "w-full"
-                )}></span>
-              </motion.div>
+              {link.name}
+              {location.pathname === link.to && (
+                <motion.span 
+                  className="absolute bottom-0 left-0 w-full h-0.5 bg-primary"
+                  layoutId="navIndicator"
+                />
+              )}
             </Link>
           ))}
 
-          {/* Dropdown */}
-          <motion.div 
-            className="relative group cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-          >
-            <div className="flex items-center gap-1 font-semibold text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary">
-              Liens rapides <FaCaretDown className="transition-transform group-hover:rotate-180 duration-300" />
-            </div>
-            <motion.div 
-              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-2 z-40 hidden group-hover:block border border-gray-100 dark:border-gray-700"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {DropDownLinks.map(link => (
+          <div className="relative group">
+            <button className="flex items-center gap-1 font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary">
+              Liens rapides <FaCaretDown className="transition-transform group-hover:rotate-180" />
+            </button>
+            <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100 dark:border-gray-700">
+              {DROPDOWN_LINKS.map(link => (
                 <Link
                   key={link.id}
                   to={link.to}
-                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition hover:translate-x-1"
+                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition"
                 >
                   {link.name}
                 </Link>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </nav>
 
-        {/* Icons */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Search - Version desktop */}
-          <motion.div 
-            className="relative hidden sm:flex items-center"
-            ref={searchRef}
-          >
-            {isSearchExpanded ? (
-              <motion.form
-                onSubmit={handleSearchSubmit}
-                initial={{ width: 0 }}
-                animate={{ width: '200px' }}
-                exit={{ width: 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
-              >
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-full pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  autoFocus
-                />
-                <button 
-                  type="submit" 
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-primary transition"
+        {/* Actions utilisateur */}
+        <div className="flex items-center gap-3">
+          {/* Barre de recherche améliorée */}
+          <div className="relative hidden md:block" ref={searchRef}>
+            <motion.div
+              animate={{ 
+                width: searchActive ? '280px' : '40px',
+                borderRadius: searchActive ? '12px' : '50%'
+              }}
+              className="overflow-hidden bg-gray-100 dark:bg-gray-800"
+            >
+              {searchActive ? (
+                <form onSubmit={handleSearchSubmit} className="flex items-center">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Rechercher produits, blogs..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-transparent border-none py-2 px-4 focus:outline-none"
+                    autoFocus
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchActive(false);
+                    }}
+                    className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    <IoMdClose />
+                  </button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setSearchActive(true)}
+                  className="w-10 h-10 flex items-center justify-center"
                   aria-label="Rechercher"
                 >
-                  <IoMdSearch className="text-xl" />
+                  <IoMdSearch className="text-xl text-gray-700 dark:text-white" />
                 </button>
-              </motion.form>
-            ) : (
-              <motion.button
-                onClick={toggleSearch}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                aria-label="Rechercher"
-              >
-                <IoMdSearch className="text-xl text-gray-700 dark:text-white" />
-              </motion.button>
-            )}
-          </motion.div>
-
-          {/* User */}
-          <Link 
-            to="/connexion" 
-            className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition"
-          >
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <FaUser className="text-xl text-gray-700 dark:text-white" />
-            </motion.div>
-          </Link>
-
-          {/* Cart */}
-          <Link 
-            to="/panier" 
-            className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition"
-          >
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <FaCartShopping className="text-xl text-gray-700 dark:text-white" />
-              {cartCount > 0 && (
-                <motion.span 
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center font-bold"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 500 }}
-                >
-                  {cartCount}
-                </motion.span>
               )}
             </motion.div>
-          </Link>
 
-          {/* Dark mode toggle */}
-          <DarkMode />
+            {/* Affichage des résultats */}
+            {searchActive && searchQuery && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="absolute top-full right-0 mt-2 w-full min-w-[300px] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 z-50"
+              >
+                {searchResults.length > 0 ? (
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                    {searchResults.map((item) => (
+                      <SearchResult key={`${item.type}-${item.id}`} item={item} />
+                    ))}
+                    <div className="p-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                      <button 
+                        type="button"
+                        onClick={handleSearchSubmit}
+                        className="text-primary font-medium hover:underline"
+                      >
+                        Voir tous les résultats pour "{searchQuery}"
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    Aucun résultat trouvé
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </div>
 
-          {/* Search - Version mobile (icône seulement) */}
-          <motion.button
-            onClick={toggleSearch}
-            className="sm:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          {/* Bouton recherche mobile */}
+          <button
+            onClick={() => setSearchActive(true)}
+            className="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
             aria-label="Rechercher"
           >
             <IoMdSearch className="text-xl text-gray-700 dark:text-white" />
-          </motion.button>
+          </button>
+
+          {/* Compte utilisateur */}
+          {/* User - Version corrigée avec navigation explicite */}
+        <Link 
+          to="/se-connecter" 
+          className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition"
+          onClick={() => {
+            setIsMenuOpen(false);
+            setIsSearchExpanded(false);
+          }}
+        >
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <FaUser className="text-xl text-gray-700 dark:text-white" />
+          </motion.div>
+        </Link>
+
+          {/* Panier */}
+          <Link
+            to="/panier"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 relative"
+          >
+            <FaCartShopping className="text-xl text-gray-700 dark:text-white" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Dark mode */}
+          <DarkMode />
         </div>
       </div>
 
-      {/* --- Mobile Menu --- */}
+      {/* Menu mobile */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
-            {/* Overlay avec flou */}
-            <motion.div 
-              className="fixed inset-0 z-40 bg-black/30 dark:bg-black/50 backdrop-blur-sm"
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={toggleMenu}
+              className="fixed inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm z-40"
+              onClick={() => setIsMenuOpen(false)}
             />
             
-            {/* Contenu du menu */}
-            <motion.div 
+            <motion.div
               ref={menuRef}
-              className="fixed inset-y-0 left-0 z-50 w-4/5 max-w-xs h-lvh rounded-lg border-primary bg-white  dark:bg-gray-900 shadow-2xl flex flex-col"
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-white dark:bg-gray-900 z-50 shadow-2xl flex flex-col"
             >
-              <div className="flex justify-between items-center p-6 rounded-full   dark:border-gray-700">
-                <Link
-                  to="/"
-                  className="text-xl font-extrabold bg-gradient-to-r from-primary to-red-600 bg-clip-text text-transparent"
-                  onClick={toggleMenu}
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-red-600 bg-clip-text text-transparent">
+                  Menu
+                </span>
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  Gremah Electro
-                </Link>
-                <motion.button 
-                  onClick={toggleMenu} 
-                  className="p-2 text-gray-800 dark:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                  whileHover={{ rotate: 90, scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  aria-label="Fermer le menu"
-                >
-                  <IoMdClose className="text-2xl" />
-                </motion.button>
+                  <IoMdClose className="text-xl" />
+                </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6">
-                <ul className="space-y-4">
-                  {MenuLinks.map(link => (
-                    <motion.li 
-                      key={link.id}
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 * link.id }}
-                    >
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {MENU_LINKS.map(link => (
+                  <Link
+                    key={link.id}
+                    to={link.to}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={clsx(
+                      "block py-3 px-4 rounded-lg font-medium",
+                      location.pathname === link.to
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    )}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+
+                <div className="pt-4">
+                  <div className="px-4 py-2 font-semibold text-gray-700 dark:text-gray-300">
+                    Liens rapides
+                  </div>
+                  <div className="space-y-1">
+                    {DROPDOWN_LINKS.map(link => (
                       <Link
+                        key={link.id}
                         to={link.to}
-                        onClick={toggleMenu}
-                        className={clsx(
-                          "block py-3 px-2 text-gray-800 dark:text-white font-medium hover:text-primary dark:hover:text-primary transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800",
-                          location.pathname === link.to && "text-primary dark:text-primary bg-gray-100 dark:bg-gray-800"
-                        )}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block py-2 px-6 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800 rounded transition"
                       >
                         {link.name}
                       </Link>
-                    </motion.li>
-                  ))}
-
-                  <motion.li 
-                    className="pt-4"
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <div className="text-gray-800 dark:text-white font-semibold py-2 px-2">
-                      Liens rapides
-                    </div>
-                    <ul className="ml-2 mt-2 space-y-2">
-                      {DropDownLinks.map(link => (
-                        <motion.li 
-                          key={link.id}
-                          initial={{ x: -20, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.1 * link.id + 0.5 }}
-                        >
-                          <Link
-                            to={link.to}
-                            onClick={toggleMenu}
-                            className="block py-2 px-4 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:translate-x-1"
-                          >
-                            {link.name}
-                          </Link>
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </motion.li>
-                </ul>
-
-                {/* Bouton de connexion mobile */}
-                <motion.div
-                  className="mt-8"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                >
-                  <Link
-                    to="/connexion"
-                    onClick={toggleMenu}
-                    className="flex items-center gap-3 py-3 px-4 text-gray-800 dark:text-white font-medium hover:text-primary dark:hover:text-primary transition rounded-lg bg-gray-100 dark:bg-gray-800"
-                  >
-                    <FaUser className="text-lg" />
-                    <span>Connexion</span>
-                  </Link>
-                </motion.div>
+                    ))}
+                  </div>
+                </div>
               </div>
-
-              {/* Search field mobile */}
-              <motion.div 
-                className="p-6 border-t border-gray-200 dark:border-gray-700"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.8 }}
-              >
-                <form onSubmit={handleSearchSubmit} className="relative">
-                  <input
-                    type="text"
-                    placeholder="Rechercher..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-gray-100 dark:bg-gray-800 border-none text-base rounded-full pl-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                  <button 
-                    type="submit"
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-primary transition"
-                    aria-label="Rechercher"
-                  >
-                    <IoMdSearch className="text-xl" />
-                  </button>
-                </form>
-              </motion.div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* --- Mobile Search Overlay --- */}
+      {/* Overlay recherche mobile */}
       <AnimatePresence>
-        {isSearchExpanded && (
-          <>
-            <motion.div 
-              className="fixed inset-0 z-40 bg-black/30 dark:bg-black/50 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={toggleSearch}
-            />
-            
-            <motion.div
-              className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md p-4"
-              initial={{ y: -100 }}
-              animate={{ y: 0 }}
-              exit={{ y: -100 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            >
-              <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+        {searchActive && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-white dark:bg-gray-900 z-50 p-4 pt-20"
+          >
+            <div className="container mx-auto">
+              <form onSubmit={handleSearchSubmit} className="relative mb-4">
                 <button
                   type="button"
-                  onClick={toggleSearch}
-                  className="p-2 text-gray-700 dark:text-white mr-2"
-                  aria-label="Fermer la recherche"
+                  onClick={() => setSearchActive(false)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                 >
                   <IoMdClose className="text-xl" />
                 </button>
                 <input
                   type="text"
-                  placeholder="Rechercher..."
+                  placeholder="Rechercher produits, blogs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-gray-100 dark:bg-gray-800 border-none text-base rounded-full pl-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full bg-gray-100 dark:bg-gray-800 rounded-full py-3 pl-12 pr-4 border-none focus:ring-2 focus:ring-primary/50"
                   autoFocus
                 />
-                <button 
+                <button
                   type="submit"
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-primary transition"
-                  aria-label="Rechercher"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-primary"
                 >
                   <IoMdSearch className="text-xl" />
                 </button>
               </form>
-            </motion.div>
-          </>
+
+              {searchQuery && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
+                >
+                  {searchResults.length > 0 ? (
+                    <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[60vh] overflow-y-auto">
+                      {searchResults.map((item) => (
+                        <SearchResult key={`mobile-${item.type}-${item.id}`} item={item} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                      Aucun résultat trouvé
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.header>
   );
 };
 
-export default Navbar;
+export default React.memo(Navbar);

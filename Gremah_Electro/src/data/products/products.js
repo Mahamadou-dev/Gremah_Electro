@@ -1,4 +1,4 @@
-// src/data/products/electro/electroProducts.js
+// src/data/products/products.js
 
 import { casquesEcouteurs } from './casques_ecouteurs';
 import { accessoires } from './accessoires';
@@ -8,7 +8,7 @@ import { hautParleurs } from './haut_parleurs';
 import { smartwatchs } from './smartwatches';
 
 // Combiner tous les produits
-const allProducts = [
+export const allProducts = [
   ...casquesEcouteurs,
   ...accessoires,
   ...laptops,
