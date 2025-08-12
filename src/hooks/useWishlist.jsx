@@ -7,7 +7,7 @@ const WISHLIST_STORAGE_KEY = 'userWishlist';
 /**
  * Custom hook for managing a user's wishlist.
  * Stores wishlist items in localStorage for persistence.
- */*
+ *
  /*
 export const useWishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);

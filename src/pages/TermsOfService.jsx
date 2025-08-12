@@ -34,6 +34,8 @@ const sections = [
   }
 ];
 
+
+
 const TermsOfUse = () => {
   return (
     <motion.div
