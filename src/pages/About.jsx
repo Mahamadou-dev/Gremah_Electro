@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaUsers, FaShieldAlt, FaRocket, FaMapMarkerAlt, FaStore, FaAward, FaHandshake } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import founderImg from '../assets/about/Maphoto.jpg';
+import founderImg from '../assets/about/MaPhoto.jpg';
 import teamImg from '../assets/about/logo.png';
 
 // Animations
