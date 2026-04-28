@@ -4,6 +4,7 @@ import 'aos/dist/aos.css';
 import { CartProvider } from './context/CartContext';/*
 import { LoadingProvider } from './context/loadingContext';*/
 import { NotificationProvider } from './context/NotificationContext';
+import { AdminAuthProvider } from './context/AdminAuthContext';
 import AppRoutes from './routes/AppRoutes';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
@@ -21,8 +22,8 @@ const App = () => {
   }, []);
 
   return (
-    <CartProvider>
-    
+    <AdminAuthProvider>
+      <CartProvider>
         <NotificationProvider>
           <div className='bg-white dark:bg-gray-900 dark:text-white duration-900 overflow-hidden'>
             <Navbar />
@@ -31,8 +32,8 @@ const App = () => {
             <ScrollToTopButton />
           </div>
         </NotificationProvider>
-     
-    </CartProvider>
+      </CartProvider>
+    </AdminAuthProvider>
   );
 };
 

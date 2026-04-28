@@ -1,8 +1,7 @@
 import React from 'react';
-import { FaUsers, FaShieldAlt, FaRocket, FaMapMarkerAlt, FaStore, FaAward, FaHandshake } from 'react-icons/fa';
+import { FaUsers, FaRocket, FaMapMarkerAlt, FaStore, FaAward, FaHandshake } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import founderImg from '../assets/about/MaPhoto.jpg';
-import teamImg from '../assets/about/logo.png';
+import { Link } from 'react-router-dom';
 
 // Animations
 const fadeInUp = {
@@ -27,10 +26,10 @@ const About = () => {
   ];
 
   const values = [
-    { icon: <FaHandshake className="text-3xl" />, title: "Intégrité", desc: "Transparence dans toutes nos transactions" },
-    { icon: <FaRocket className="text-3xl" />, title: "Innovation", desc: "Toujours à la pointe de la technologie" },
-    { icon: <FaAward className="text-3xl" />, title: "Excellence", desc: "Qualité premium dans chaque produit" },
-    { icon: <FaUsers className="text-3xl" />, title: "Communauté", desc: "Au service de notre clientèle" }
+    { icon: <FaHandshake className="text-3xl" />, title: "Intégrité", desc: "Transparence et éthique dans toutes nos transactions commerciales." },
+    { icon: <FaRocket className="text-3xl" />, title: "Innovation", desc: "Sélection rigoureuse des technologies les plus avancées du marché." },
+    { icon: <FaAward className="text-3xl" />, title: "Excellence", desc: "Qualité premium certifiée pour chaque produit en catalogue." },
+    { icon: <FaUsers className="text-3xl" />, title: "Engagement", desc: "Accompagnement personnalisé avant, pendant et après l'achat." }
   ];
 
   return (
@@ -51,19 +50,21 @@ const About = () => {
             L'<span className="text-yellow-300">Excellence</span> Technologique
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-xl text-blue-100 max-w-3xl mx-auto mb-10">
-            Gremah Electro - Votre passerelle vers l'innovation et la qualité depuis 2020
+            Distributeur agréé de produits électroniques au Niger depuis 2020.
           </motion.p>
           <motion.div variants={fadeInUp} className="flex justify-center gap-4">
-            <button 
-              onClick={() => window.location.href = '/boutique'}
-              className="px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-full transition-all transform hover:scale-105">
+            <Link
+              to="/boutique"
+              className="px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-full transition-all transform hover:scale-105"
+            >
               Découvrir nos produits
-            </button>
-            <button 
-              onClick={() => window.location.href = '/contact'}
-              className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-primary font-bold rounded-full transition-all transform hover:scale-105">
+            </Link>
+            <Link
+              to="/contact"
+              className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-primary font-bold rounded-full transition-all transform hover:scale-105"
+            >
               Contactez-nous
-            </button>
+            </Link>
           </motion.div>
         </motion.div>
       </section>
@@ -92,41 +93,32 @@ const About = () => {
         </div>
       </section>
 
-      {/* Notre Histoire */}
+      {/* Notre Entreprise */}
       <section className="py-20">
         <div className="container mx-auto px-6">
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             variants={staggerContainer}
             viewport={{ once: true }}
-            className="flex flex-col lg:flex-row items-center gap-12"
+            className="max-w-4xl mx-auto text-center"
           >
-            <motion.div variants={fadeInUp} className="lg:w-1/2">
+            <motion.div variants={fadeInUp}>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-                Notre <span className="text-primary">Histoire</span>
+                Notre <span className="text-primary">Entreprise</span>
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-                Fondée en 2020 à Zinder, Gremah Electro est rapidement devenue une référence dans le domaine 
-                de l'électronique au Niger. Ce qui a commencé comme une petite boutique locale est aujourd'hui 
-                une entreprise florissante avec une clientèle fidèle à travers le pays.
+                Gremah Electro est un distributeur spécialisé dans l'électronique de consommation au Niger.
+                Depuis notre création, nous avons pour mission de rendre la technologie accessible aux
+                professionnels et aux particuliers avec des produits fiables, garantis et accompagnés d'un
+                service après-vente structuré.
               </p>
               <p className="text-lg text-gray-600 dark:text-gray-300">
-                Notre succès repose sur un engagement inébranlable envers la qualité, l'innovation et 
-                la satisfaction client, des valeurs qui continuent de guider notre croissance.
+                Notre catalogue couvre les smartphones, ordinateurs, accessoires audio, montres connectées
+                et équipements électroniques des plus grandes marques internationales. Nous travaillons
+                exclusivement avec des fournisseurs agréés pour garantir l'authenticité et la traçabilité
+                de chaque produit.
               </p>
-            </motion.div>
-            <motion.div variants={fadeInUp} className="lg:w-1/2 relative">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                <img 
-                  src={teamImg} 
-                  alt="Équipe Gremah Electro" 
-                  className="w-full h-auto object-cover transition-transform duration-500 hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
-                  <h3 className="text-2xl font-bold text-white">L'équipe Gremah Electro - 2023</h3>
-                </div>
-              </div>
             </motion.div>
           </motion.div>
         </div>
@@ -136,8 +128,9 @@ const About = () => {
       <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-6">
           <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial="hidden"
+            whileInView="visible"
+            variants={staggerContainer}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
@@ -172,48 +165,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* Notre Fondateur */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            variants={staggerContainer}
-            viewport={{ once: true }}
-            className="flex flex-col lg:flex-row items-center gap-12"
-          >
-            <motion.div variants={fadeInUp} className="lg:w-1/2 order-2 lg:order-1">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-                Notre <span className="text-primary">Visionnaire</span>
-              </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-                Mahamadou Amadou Habou Gremah, fondateur et PDG de Gremah Electro, est un passionné 
-                de technologie dont la vision a transformé le paysage électronique au Niger.
-              </p>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-                Avec une formation en ingénierie et un sens aigu des affaires, il a su combiner 
-                expertise technique et sens commercial pour bâtir une entreprise qui redéfinit 
-                les standards du secteur.
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-1 bg-primary"></div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Mahamadou Amadou Habou Gremah</span>
-              </div>
-            </motion.div>
-            <motion.div variants={fadeInUp} className="lg:w-1/2 order-1 lg:order-2">
-              <div className="relative group">
-                <div className="absolute -inset-4 bg-gradient-to-r from-primary to-blue-600 rounded-2xl opacity-75 group-hover:opacity-100 blur-md transition duration-500"></div>
-                <img 
-                  src={founderImg} 
-                  alt="Fondateur de Gremah Electro" 
-                  className="relative rounded-2xl w-full h-auto object-cover z-10 transform group-hover:-rotate-1 transition duration-300"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-900 to-primary">
         <div className="container mx-auto px-6 text-center">
@@ -240,11 +191,12 @@ const About = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
           >
-            <button 
-              onClick={() => window.location.href = '/boutique'}
-              className="px-10 py-4 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-full text-lg transition-all transform hover:scale-105 shadow-lg">
+            <Link
+              to="/boutique"
+              className="inline-block px-10 py-4 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-full text-lg transition-all transform hover:scale-105 shadow-lg"
+            >
               Visiter la boutique
-            </button>
+            </Link>
           </motion.div>
         </div>
       </section>

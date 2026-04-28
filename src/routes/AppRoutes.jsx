@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom';
 import Home from '../pages/Home';
 import Shop from '../pages/Shop';
 import ProductDetail from '../pages/ProductDetail';
@@ -15,7 +15,12 @@ import ForgotPassword from '../pages/ForgotPassword';
 import SignUp from '../pages/SignUp';
 import TermsOfService from '../pages/TermsOfService';
 import PrivacyPolicy from '../pages/PrivacyPolicy';
-
+import { useAdminAuth } from '../context/AdminAuthContext';
+import AdminLogin from '../pages/AdminLogin';
+import AdminLayout from '../pages/admin/AdminLayout';
+import StatsOverview from '../pages/admin/StatsOverview';
+import ProductsManager from '../pages/admin/ProductsManager';
+import BlogsManager from '../pages/admin/BlogsManager';
 
 // Wrapper pour ProductDetail (version corrigée)
 const ProductDetailWrapper = () => {
@@ -41,6 +46,14 @@ const BlogDetailWrapper = () => {
   return <BlogDetail />;
 };
 
+// Protection route admin
+const AdminRoute = () => {
+  const { isAdmin, isLoading } = useAdminAuth();
+  if (isLoading) return null;
+  if (!isAdmin) return <Navigate to="/admin/login" replace />;
+  return <Outlet />;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -59,6 +72,14 @@ const AppRoutes = () => {
       <Route path="/creer-un-compte" element={<SignUp />} />
       <Route path="/conditions" element={<TermsOfService />} />
       <Route path="/politique-confidentialite" element={<PrivacyPolicy />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<StatsOverview />} />
+          <Route path="produits" element={<ProductsManager />} />
+          <Route path="blogs" element={<BlogsManager />} />
+        </Route>
+      </Route>
     </Routes>
   );
 };
